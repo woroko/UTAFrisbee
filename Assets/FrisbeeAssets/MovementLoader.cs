@@ -4,21 +4,24 @@ using UnityEngine;
 
 public class MovementLoader : MonoBehaviour {
 
-    public GameObject frisbeeMalli;
-    public TextAsset csvTiedosto;
-    int EKARIVI = 7;
+    public GameObject frisbeeModel;
+    public TextAsset recording;
+    public float SPEEDFACTOR = 1F;
+    int FIRSTROW = 7;
 
-    List<FrisbeeSijainti> sijaintiLista = new List<FrisbeeSijainti>(); //float[4] kvaternioni
-    int animaatioIndeksi = 0;
-    Vector3 posSkaala = new Vector3(0.5F, 0.5F, 0.5F);
+    List<FrisbeeLocation> locationList = new List<FrisbeeLocation>(); //float[4] kvaternioni
+    int animIndex = 0;
+    Vector3 posScale = new Vector3(0.5F, 0.5F, 0.5F);
+    float rateTimer = 0F;
+
 
 	// init
 	void Start () {
-        string[] rivit = csvTiedosto.text.Split('\n');
+        string[] rows = recording.text.Split('\n');
 
-        for(int i=EKARIVI; i<rivit.Length; i++)
+        for(int i=FIRSTROW; i<rows.Length; i++)
         {
-            string[] kentat = rivit[i].Split(',');
+            string[] kentat = rows[i].Split(',');
             float testi;
             
             try
@@ -32,29 +35,33 @@ public class MovementLoader : MonoBehaviour {
                 Vector3 pos = new Vector3(float.Parse(kentat[6]),
                 float.Parse(kentat[7]), float.Parse(kentat[8]));
 
-                sijaintiLista.Add(new FrisbeeSijainti(rot, pos));
+                locationList.Add(new FrisbeeLocation(rot, pos));
 
             }
             catch
             {
-                sijaintiLista.Add(null);
+                locationList.Add(null);
             }
         }
 
 	}
 	
-	// kutsutaan joka frame
+	// called every frame
 	void Update () {
-        if (animaatioIndeksi < sijaintiLista.Count) {
-            if (sijaintiLista[animaatioIndeksi] != null)
+        if (animIndex < locationList.Count) {
+            if (locationList[animIndex] != null)
             {
-                FrisbeeSijainti sijainti = sijaintiLista[animaatioIndeksi];
-                frisbeeMalli.transform.localRotation = sijainti.rot;
-                frisbeeMalli.transform.localPosition = Vector3.Scale(sijainti.pos - new Vector3(0F, 1F, 0F), posSkaala);
+                FrisbeeLocation location = locationList[animIndex];
+                frisbeeModel.transform.localRotation = location.rot;
+                frisbeeModel.transform.localPosition = Vector3.Scale(location.pos - new Vector3(0F, 1F, 0F), posScale);
             }
-            animaatioIndeksi++;
+            animIndex = (int)(rateTimer / 0.01F);
+            rateTimer += Time.deltaTime*SPEEDFACTOR;
         }
         else
-        { animaatioIndeksi = 0;}
+        {
+            animIndex = 0;
+            rateTimer = 0F;
+        }
 	}
 }
