@@ -22,7 +22,6 @@ public class MovementLoader : MonoBehaviour {
         for(int i=FIRSTROW; i<rows.Length; i++)
         {
             string[] kentat = rows[i].Split(',');
-            float testi;
             
             try
             {
