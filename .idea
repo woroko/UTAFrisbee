@@ -1,0 +1,13 @@
+
+
+frisbeelocatoin
+recordingfrisbee
+playbackfrisbee
+movement loader -from csv
+
+
+frisbee
+	has location
+		has input?
+		has output
+		
