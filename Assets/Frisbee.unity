@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657826, g: 0.49641263, b: 0.57481676, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641258, b: 0.5748172, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -274,7 +274,6 @@ GameObject:
   - component: {fileID: 1325101914}
   - component: {fileID: 1325101913}
   - component: {fileID: 1325101911}
-  - component: {fileID: 1325101915}
   - component: {fileID: 1325101912}
   m_Layer: 0
   m_Name: PlaybackFrisbee
@@ -323,12 +322,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1325101910}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3196a79a03439854995827845e685619, type: 3}
+  m_Script: {fileID: 11500000, guid: fa942d0ff3e6365498e0c32fb16a8d46, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   frisbeeModel: {fileID: 1325101910}
   recording: {fileID: 4900000, guid: 501701f3977a503469a30efdb88103ca, type: 3}
-  SPEEDFACTOR: 0.1
+  speed: 1
 --- !u!33 &1325101913
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -349,19 +348,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1325101915
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1325101910}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f77bc200897df4f4483b478b598b0c51, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  StreamingClient: {fileID: 0}
-  RigidBodyId: 1
 --- !u!1 &1685009693
 GameObject:
   m_ObjectHideFlags: 0
@@ -459,7 +445,6 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 1778722699}
-  - component: {fileID: 1778722700}
   - component: {fileID: 1778722701}
   m_Layer: 0
   m_Name: RecordingFrisbee
@@ -475,24 +460,12 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1778722698}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0.419}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 288383688}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1778722700
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1778722698}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 461b4e36b027ada479d4d6be6f20f214, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  RecordingFrisbee: {fileID: 1325101910}
 --- !u!114 &1778722701
 MonoBehaviour:
   m_ObjectHideFlags: 0
