@@ -2,13 +2,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class Threshold {
+	public float throwing, holding, ending;
+}
+
 public class ThrowController : MonoBehaviour {
 
 	//Update runs 100 times per second?? (really?) so then 1.5sec is obv 150. suggested: long=150, short=50
 	public int longBehind;
 	public int shortBehind;
-	public float throwThreshold;
-	public float holdThreshold;
+
+	public Threshold threshold;
 
 	public Transform trackingTarget;
 
@@ -18,6 +23,9 @@ public class ThrowController : MonoBehaviour {
 
 
 	private int throwMode; //0 = playback , 1 = waiting for throw , 2 = throw
+
+	// uhh
+	Vector3 throwStart;
 
 	//queue 2: a longer queue for detecting the WAIT for THROW
 	private Queue<Vector3> oldPosition = new Queue<Vector3>(); 
@@ -69,24 +77,29 @@ public class ThrowController : MonoBehaviour {
 		float difference = (shortAndLongDif - nowAndShortDif);//2*1000;
 
 		//0 = playback , 1 = waiting for throw , 2 = throw
-		if (WaitingForThrow() && nowAndShortDif > throwThreshold) {
+		if (WaitingForThrow() && nowAndShortDif > threshold.throwing) {
 			throwMode = 2;
-			Debug.Log("now throwing!");
+			Debug.Log("now throwing!"/*+ nowAndShortDif*/);
 			//throwstart = position OR alternatively  throwstart = positionshort, check which is better
+			throwStart = positionShort;
 		} 
 
-		else if (InPlayback () && Time.time > nextThrow && difference < holdThreshold) {
+		else if (InPlayback () && Time.time > nextThrow && difference < threshold.holding) {
 			nextThrow = Time.time + throwRate;
 			throwMode = 1;
-			Debug.Log("now waiting for throw!");
+			Debug.Log("now waiting for throw!"/*+ difference*/);
 		} 
 
 		else if (Throwing ()) { 
-			// TODO: check if "wall" has been breached
-			Debug.Log("airborne OR hit wall?!");
-			//let's just...
+			
+			Debug.Log("airborne OR mid-throw!");
+
 			// if distance ( throwstart, position ) > threshold ...
-			throwMode = 0;
+			if (Vector3.Distance (throwStart, position) > threshold.ending) {
+				Debug.Log ("hit wall"+throwStart/*+ Vector3.Distance (throwStart, position)*/);
+				throwMode = 0;
+			}
+			//maybe time limit too
 		}
 
 		oldPosition.Enqueue (position);

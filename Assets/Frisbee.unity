@@ -1134,8 +1134,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   longBehind: 150
   shortBehind: 55
-  throwThreshold: 1
-  holdThreshold: 1
+  threshold:
+    throwing: 1
+    holding: 0.3
+    ending: 0.01
   trackingTarget: {fileID: 1325101914}
   throwRate: 5
 --- !u!1 &1397437431
@@ -2117,8 +2119,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   longBehind: 55
   shortBehind: 15
-  throwThreshold: 55
-  holdThreshold: 55
+  threshold:
+    throwing: 0
+    holding: 0
+    ending: 0
   trackingTarget: {fileID: 1778722699}
   throwRate: 5
 --- !u!114 &1778722701
