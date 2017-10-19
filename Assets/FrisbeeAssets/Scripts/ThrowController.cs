@@ -4,8 +4,7 @@ using UnityEngine;
 
 public class ThrowController : MonoBehaviour {
 
-
-	//public int elemsBehind;
+	//Update runs 100 times per second?? (really?) so then 1.5sec is obv 150. suggested: long=150, short=50
 	public int longBehind;
 	public int shortBehind;
 	public float throwThreshold;
@@ -13,6 +12,7 @@ public class ThrowController : MonoBehaviour {
 
 	public Transform trackingTarget;
 
+	//delay between throws ( if the frisbee is laying in the net, don't start a new throw based off that stillness. )
 	public float throwRate;
 	private float nextThrow;
 
@@ -27,10 +27,6 @@ public class ThrowController : MonoBehaviour {
 
 	void Start ()
 	{
-		//test for lab - could be used to make unity components less cluttered if works.
-		//OptitrackRigidBody orb = gameObject.GetComponent<OptitrackRigidBody>();
-		//Debug.Log (orb.transform == trackingTarget);
-
 		//start program off in playback
 		throwMode = 0;
 
@@ -48,6 +44,10 @@ public class ThrowController : MonoBehaviour {
 			}
 		}
 		//oldPosition.TrimToSize (); // not working -> not worth the effort
+
+		//test for lab - could be used to make unity components less cluttered if works.
+		//OptitrackRigidBody orb = gameObject.GetComponent<OptitrackRigidBody>();
+		//Debug.Log ("orb==trackingtarget: "+(orb.transform == trackingTarget));
 	}
 
 	/*
@@ -66,15 +66,13 @@ public class ThrowController : MonoBehaviour {
 		float shortAndLongDif = Vector3.Distance(positionShort, positionLong);
 		float nowAndShortDif = Vector3.Distance(position, positionShort);
 
-		//float difference = Vector3.Distance(position, oldPosition.Dequeue ());
 		float difference = (shortAndLongDif - nowAndShortDif);//2*1000;
-		//Debug.Log ("hi?");
-		//Debug.Log (difference);
+
 		//0 = playback , 1 = waiting for throw , 2 = throw
-		//TODO: forgot what it was but something.......
 		if (WaitingForThrow() && nowAndShortDif > throwThreshold) {
 			throwMode = 2;
 			Debug.Log("now throwing!");
+			//throwstart = position OR alternatively  throwstart = positionshort, check which is better
 		} 
 
 		else if (InPlayback () && Time.time > nextThrow && difference < holdThreshold) {
@@ -85,9 +83,9 @@ public class ThrowController : MonoBehaviour {
 
 		else if (Throwing ()) { 
 			// TODO: check if "wall" has been breached
-			//to_do_wallfunc();
 			Debug.Log("airborne OR hit wall?!");
 			//let's just...
+			// if distance ( throwstart, position ) > threshold ...
 			throwMode = 0;
 		}
 
