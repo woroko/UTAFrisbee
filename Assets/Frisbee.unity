@@ -1101,6 +1101,7 @@ MonoBehaviour:
   frisbeeModel: {fileID: 1325101910}
   recording: {fileID: 4900000, guid: 501701f3977a503469a30efdb88103ca, type: 3}
   speed: 1
+  throwController: {fileID: 1325101915}
 --- !u!33 &1325101913
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -1139,7 +1140,7 @@ MonoBehaviour:
     holding: 0.3
     ending: 0.01
   trackingTarget: {fileID: 1325101914}
-  throwRate: 5
+  throwRate: 15
 --- !u!1 &1397437431
 GameObject:
   m_ObjectHideFlags: 0

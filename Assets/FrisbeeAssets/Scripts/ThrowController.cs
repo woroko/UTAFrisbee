@@ -7,6 +7,7 @@ public class Threshold {
 	public float throwing, holding, ending;
 }
 
+
 public class ThrowController : MonoBehaviour {
 
 	//Update runs 100 times per second?? (really?) so then 1.5sec is obv 150. suggested: long=150, short=50
@@ -74,12 +75,13 @@ public class ThrowController : MonoBehaviour {
 		float shortAndLongDif = Vector3.Distance(positionShort, positionLong);
 		float nowAndShortDif = Vector3.Distance(position, positionShort);
 
-		float difference = (shortAndLongDif - nowAndShortDif);//2*1000;
+		float difference = (shortAndLongDif - nowAndShortDif);
 
 		//0 = playback , 1 = waiting for throw , 2 = throw
 		if (WaitingForThrow() && nowAndShortDif > threshold.throwing) {
 			throwMode = 2;
 			Debug.Log("now throwing!"/*+ nowAndShortDif*/);
+
 			//throwstart = position OR alternatively  throwstart = positionshort, check which is better
 			throwStart = positionShort;
 		} 
@@ -94,11 +96,11 @@ public class ThrowController : MonoBehaviour {
 			
 			Debug.Log("airborne OR mid-throw!");
 
-			// if distance ( throwstart, position ) > threshold ...
 			if (Vector3.Distance (throwStart, position) > threshold.ending) {
 				Debug.Log ("hit wall"+throwStart/*+ Vector3.Distance (throwStart, position)*/);
 				throwMode = 0;
 			}
+
 			//maybe time limit too
 		}
 
