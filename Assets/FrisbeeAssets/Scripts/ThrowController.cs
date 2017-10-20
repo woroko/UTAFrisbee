@@ -1,19 +1,23 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+
 using UnityEngine;
 using UnityEngine.UI;
 
 [System.Serializable]
 public class Threshold {
-	public float throwing, holding, ending;
+	public float throwing, holding, ending, glitch;
+    //recommend 0.2, 0.05, 1.2, 5
 }
 
 
 public class ThrowController : MonoBehaviour {
 
-	//Update runs 100 times per second?? (really?) so then 1.5sec is obv 150. suggested: long=150, short=50
-	public int longBehind;
-	public int shortBehind;
+    //Suggested values: backtracking=1.5s, throwDetection=0.5s
+    //NOTE: Update runs at variable Unity framerate, need timestamps
+
+    public float throwBacktrackingTime = 1.5F;
+    public float throwDetectionTime = 0.5F;
 
 	public Threshold threshold;
 
@@ -27,41 +31,39 @@ public class ThrowController : MonoBehaviour {
 	private float nextThrow;
 
 
-	private int throwMode; //0 = playback , 1 = waiting for throw , 2 = throw
+	private int throwMode; //0 = playback , 1 = waiting for throw + playback , 2 = throw
 
-	// uhh
-	Vector3 throwStart;
+	// position that throw started
+    Vector3 throwStartPos;
+    float throwStartTime;
+    float scriptStartTime;
 
-	//queue 2: a longer queue for detecting the WAIT for THROW
-	private Queue<Vector3> oldPosition = new Queue<Vector3>(); 
+    private const int BUFFERCAPACITY = 2000;
 
-	//queue 1: a short queue for detecting THROW
-	private Queue<Vector3> recentPosition = new Queue<Vector3>(); 
+    //Create a new double-ended queue with a capacity of BUFFERCAPACITY FrisbeeLocations
+    //Double-ended queue implementation from 
+    private Deque<FrisbeeLocation> captureBuffer = new Deque<FrisbeeLocation>(BUFFERCAPACITY);
+    private List<FrisbeeLocation> throwBuffer = null;
 
-	void Start ()
+    void Start ()
 	{
-		//start program off in playback
+		//start program off in playback mode
 		throwMode = 0;
 
-		//populate oldPosition with zeroes. this will probably mess up the first few seconds of program start
-		//but alternative is having it crash when it Dequeues a null?
-		// TODO: set "calibrating" mode.
-		for (int i=0; i<longBehind /*elemsBehind*/; i++){
-			
-			// doesn't matter if it's the same ref for both, no changing happens anyhow - "cannot be declared const" - unity
-			Vector3 v3 = new Vector3 (0, 0, 0); 
-
-			oldPosition.Enqueue (v3);
-			if (i < shortBehind) {
-				recentPosition.Enqueue (v3);
-			}
-
-		}
+        //start waiting for throws after 2.5 seconds
+        nextThrow = Time.time + 2.5F;
 
 		//UI
 		SetModeText ();
 
-		//oldPosition.TrimToSize (); // not working -> not worth the effort
+        //Buffer on program start
+        scriptStartTime = Time.time;
+
+        /*NOTE: RecordingFrisbee is Useful for debugging, because we can see the position
+        in the editor while running. Also, it will be more portable if other
+        MoCap systems than OptiTrack exist that provide a Unity plugin
+        Direct access would also be useful though, since we could detect isSeen()
+        NOTE: Direct access now implemented in CustomRigidBody*/
 
 		//test for lab - could be used to make unity components less cluttered if works.
 		//OptitrackRigidBody orb = gameObject.GetComponent<OptitrackRigidBody>();
@@ -69,21 +71,34 @@ public class ThrowController : MonoBehaviour {
 	}
 
 	/*
-	 * the dream:
-	 * check distance between current position and position elemsBehind updates ago to see relative change
-	 * and use that to distinguish between modes
+	 * Buffers BUFFERCAPACITY number of previous FrisbeeLocations
+     * 
 	 */
-	void Update() { //Update vs LateUpdate?
-		Vector3 position = new Vector3 (trackingTarget.position.x, trackingTarget.position.y, trackingTarget.position.z);
+	void Update() {
+        Vector3 currentPosition = new Vector3 (trackingTarget.position.x, trackingTarget.position.y, trackingTarget.position.z);
+
+        //add current FrisbeeLocation to back of queue
+        //buffer has not yet reached full capacity
+        if (captureBuffer.Count < BUFFERCAPACITY-1)
+            captureBuffer.Add(new FrisbeeLocation(trackingTarget.localRotation, trackingTarget.localPosition, Time.time));
+        else //buffer has reached BUFFERCAPACITY
+        {
+            captureBuffer.RemoveFront(); //remove oldest FrisbeeLocation
+            captureBuffer.Add(new FrisbeeLocation(trackingTarget.localRotation, trackingTarget.localPosition, Time.time));
+        }
+        
 
 
-		//0 = playback , 1 = waiting for throw , 2 = throw
-		HandleModeChanges (position);
+		//0 = playback , 1 = waiting for throw + playback , 2 = throw in progress
+        //Buffer first 2.5 seconds
+        if (Time.time > scriptStartTime + 2.5F)
+		HandleModeChanges(currentPosition);
+        if(Throwing())
+        {
+            throwBuffer.Add(new FrisbeeLocation(trackingTarget.localRotation, trackingTarget.localPosition, Time.time-throwStartTime));
+        }
 
-		SetModeText ();
-
-		oldPosition.Enqueue (position);
-		recentPosition.Enqueue (position);
+		SetModeText();
 	}
 
 
@@ -92,62 +107,115 @@ public class ThrowController : MonoBehaviour {
 		modeText.text = "Mode: " + GetMode().ToString();
 	}
 
+    //finds the closest index to the timestamp
+    public int getBufferIndexFromTime(Deque<FrisbeeLocation> queue, float time)
+    {
+        int i = 0;
+        bool found = false;
+        if (time >= queue[queue.Count - 1].time)
+        {
+            return -1;
+        }
+        else
+        {
+            for (i = 0; i < queue.Count; i++)
+            {
+                if (time <= queue.Get(i).time)
+                {
+                    found = true;
+                    break;
+                }
+            }
+        }
+        if (found)
+            return i;
+        else return -1; // did not find a FrisbeeLocation for time
+    }
 
-	void HandleModeChanges (Vector3 position)
+    //finds the position frisbee position at (time) in the buffer
+    Vector3 getPosAtTime(Deque<FrisbeeLocation> queue, float time)
+    {
+        int idx = getBufferIndexFromTime(queue, time);
+        if (idx < 0)
+        {
+            Debug.Log("getPosAtTime: Could not find position at time: " + time);
+            return new Vector3(0F, 0F, 0F);
+        }
+        return queue.Get(idx).pos;
+    }
+
+
+    void HandleModeChanges (Vector3 position)
 	{
+        //calc difference between current position and position throwDetectionTime seconds before present in buffer
+        float difference = Vector3.Distance(position, getPosAtTime(captureBuffer, Time.time - throwDetectionTime));//(shortAndLongDif - nowAndShortDif);
 
-		Vector3 positionShort = recentPosition.Dequeue ();
-		Vector3 positionLong = oldPosition.Dequeue ();
-		//Debug.Log ("short: "+positionShort);
-		//Debug.Log ("long: "+positionLong);
-
-		float shortAndLongDif = Vector3.Distance(positionShort, positionLong);
-		float nowAndShortDif = Vector3.Distance(position, positionShort);
-
-		float difference = (shortAndLongDif - nowAndShortDif);
-
-
-		if (WaitingForThrow() && nowAndShortDif > threshold.throwing) {
-			HandleThrow (positionShort);
-		} 
-
+        //threshold.glitch hack to ignore DebugMover abrupt position jump
+        //detect throw start if position difference in throwDetectionTime is above throwing threshold
+        //also includes rudimentary check for z-safezone
+		if (WaitingForThrow() && difference > threshold.throwing && difference < threshold.glitch && position.z < 1F) {
+			HandleThrow(position);
+		}
 		else if (InPlayback () && Time.time > nextThrow && difference < threshold.holding) {
-			HandleNewThrowStart ();
+            throwMode = 1;
+            Debug.Log("Waiting for throw...");
 		} 
+		else if (Throwing ()) {
 
-		else if (Throwing ()) { 
-
-			Debug.Log("airborne OR mid-throw!"+ Vector3.Distance (throwStart, position));
+            if (Time.frameCount % 50 == 0)
+                Debug.Log("airborne OR mid-throw, zpos: " + (position.z - throwStartPos.z));
 
 			HandleEnd (position);
 
 			//maybe time limit too
 		}
+
+
 	}
 
-	void HandleThrow (Vector3 positionShort)
+	void HandleThrow (Vector3 position)
 	{
-		throwMode = 2;
+        throwStartTime = Time.time - throwBacktrackingTime;
+        int firstThrowIndex = getBufferIndexFromTime(captureBuffer, throwStartTime);
+        throwMode = 2;
 		Debug.Log("Throw just began!");
 
-		//throwstart = position OR alternatively  throwstart = positionshort, check which is better
-		throwStart = positionShort;
+        //get first FrisbeeLocation in throw
+        FrisbeeLocation temp = captureBuffer.Get(firstThrowIndex);
+
+        throwStartPos = temp.pos;
+        throwStartTime = temp.time;
+
+        //reinitialize throwBuffer to empty list
+        throwBuffer = new List<FrisbeeLocation>();
+
+        //Transfer previous throwBacktrackingTime seconds of data to throwBuffer
+        //to make sure that the beginning of the throw is not lost
+        //TODO: maybe add a more sophisticated backtracking algorithm that is based on velocity
+        for (int i=firstThrowIndex; i<captureBuffer.Count; i++)
+        {
+            temp = captureBuffer.Get(i);
+            //manually initialize first timestamp to zero
+            if (i == firstThrowIndex)
+                throwBuffer.Add(new FrisbeeLocation(temp.rot, temp.pos, 0F));
+            else //rest of the timestamps will increment from zero
+                throwBuffer.Add(new FrisbeeLocation(temp.rot, temp.pos, temp.time - throwStartTime));
+        }
+        
+
+
 	}
 
-	void HandleNewThrowStart ()
-	{
-		nextThrow = Time.time + throwRate;
-		throwMode = 1;
-		Debug.Log("now waiting for throw!");
-	}
-
+    //Detect if z-distance from beginning of throw is greater than ending threshold (virtual wall)
 	void HandleEnd (Vector3 position)
 	{
-		if (Vector3.Distance (throwStart, position) > threshold.ending) {
-			Debug.Log ("hit wall"+throwStart);
+		if ((position.z - throwStartPos.z) > threshold.ending) {
+			Debug.Log ("hit max throw z-distance at: " + position + " z-dist: " + (position.z - throwStartPos.z));
 			throwMode = 0;
-		}
-	}
+            nextThrow = Time.time + throwRate;
+        }
+        
+    }
 
 		
 
@@ -174,4 +242,22 @@ public class ThrowController : MonoBehaviour {
 	{
 		return throwMode;
 	}
+
+    public List<FrisbeeLocation> getThrowBuffer()
+    {
+        if (InPlayback() || WaitingForThrow())
+        {
+            return throwBuffer;
+        }
+        else return null;
+    }
+
+    public Vector3 getCurrentPos()
+    {
+        return trackingTarget.localPosition;
+    }
+    public Quaternion getCurrentRot()
+    {
+        return trackingTarget.localRotation;
+    }
 }
