@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 [System.Serializable]
 public class Threshold {
@@ -17,6 +18,9 @@ public class ThrowController : MonoBehaviour {
 	public Threshold threshold;
 
 	public Transform trackingTarget;
+
+	//UI
+	public Text modeText;
 
 	//delay between throws ( if the frisbee is laying in the net, don't start a new throw based off that stillness. )
 	public float throwRate;
@@ -51,7 +55,12 @@ public class ThrowController : MonoBehaviour {
 			if (i < shortBehind) {
 				recentPosition.Enqueue (v3);
 			}
+
 		}
+
+		//UI
+		SetModeText ();
+
 		//oldPosition.TrimToSize (); // not working -> not worth the effort
 
 		//test for lab - could be used to make unity components less cluttered if works.
@@ -67,6 +76,26 @@ public class ThrowController : MonoBehaviour {
 	void Update() { //Update vs LateUpdate?
 		Vector3 position = new Vector3 (trackingTarget.position.x, trackingTarget.position.y, trackingTarget.position.z);
 
+
+		//0 = playback , 1 = waiting for throw , 2 = throw
+		HandleModeChanges (position);
+
+		SetModeText ();
+
+		oldPosition.Enqueue (position);
+		recentPosition.Enqueue (position);
+	}
+
+
+	void SetModeText ()
+	{
+		modeText.text = "Mode: " + GetMode().ToString();
+	}
+
+
+	void HandleModeChanges (Vector3 position)
+	{
+
 		Vector3 positionShort = recentPosition.Dequeue ();
 		Vector3 positionLong = oldPosition.Dequeue ();
 		//Debug.Log ("short: "+positionShort);
@@ -77,37 +106,50 @@ public class ThrowController : MonoBehaviour {
 
 		float difference = (shortAndLongDif - nowAndShortDif);
 
-		//0 = playback , 1 = waiting for throw , 2 = throw
-		if (WaitingForThrow() && nowAndShortDif > threshold.throwing) {
-			throwMode = 2;
-			Debug.Log("now throwing!"/*+ nowAndShortDif*/);
 
-			//throwstart = position OR alternatively  throwstart = positionshort, check which is better
-			throwStart = positionShort;
+		if (WaitingForThrow() && nowAndShortDif > threshold.throwing) {
+			HandleThrow (positionShort);
 		} 
 
 		else if (InPlayback () && Time.time > nextThrow && difference < threshold.holding) {
-			nextThrow = Time.time + throwRate;
-			throwMode = 1;
-			Debug.Log("now waiting for throw!"/*+ difference*/);
+			HandleNewThrowStart ();
 		} 
 
 		else if (Throwing ()) { 
-			
-			Debug.Log("airborne OR mid-throw!");
 
-			if (Vector3.Distance (throwStart, position) > threshold.ending) {
-				Debug.Log ("hit wall"+throwStart/*+ Vector3.Distance (throwStart, position)*/);
-				throwMode = 0;
-			}
+			Debug.Log("airborne OR mid-throw!"+ Vector3.Distance (throwStart, position));
+
+			HandleEnd (position);
 
 			//maybe time limit too
 		}
-
-		oldPosition.Enqueue (position);
-		recentPosition.Enqueue (position);
 	}
 
+	void HandleThrow (Vector3 positionShort)
+	{
+		throwMode = 2;
+		Debug.Log("Throw just began!");
+
+		//throwstart = position OR alternatively  throwstart = positionshort, check which is better
+		throwStart = positionShort;
+	}
+
+	void HandleNewThrowStart ()
+	{
+		nextThrow = Time.time + throwRate;
+		throwMode = 1;
+		Debug.Log("now waiting for throw!");
+	}
+
+	void HandleEnd (Vector3 position)
+	{
+		if (Vector3.Distance (throwStart, position) > threshold.ending) {
+			Debug.Log ("hit wall"+throwStart);
+			throwMode = 0;
+		}
+	}
+
+		
 
 	/*
 	 * returns true if game object is in playback mode, otherwise false. 
