@@ -49,7 +49,7 @@ public class CustomRigidBody : MonoBehaviour
             return null;
     }
     //TODO: UI Team: Implement isSeen indicator according to #8
-    bool isSeen()
+    public bool isSeen()
     {
         if (rbState == null)
             return false;
