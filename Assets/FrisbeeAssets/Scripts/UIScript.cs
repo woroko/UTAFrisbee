@@ -22,6 +22,11 @@ public class UIScript : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
+		// Clear the trail visualization when pressing space
+		if (Input.GetKey ("space")) {
+			frisbee.GetComponent<TrailRenderer> ().Clear();
+		}
+
 		// Changing the indicator text based on the isSeen() method
 		if (frisbeeScript.isSeen ()) {
 			recordingIndicator.text = "Recording...";

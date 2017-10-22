@@ -13,7 +13,7 @@ public class StartMenuScript : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
-		// Stop time (so the frisbee doesn't fly while in start menu)
+		// Stop time
 		Time.timeScale = 0F;
 
 		// Set a click action for the start button
@@ -25,6 +25,11 @@ public class StartMenuScript : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update() {
+
+		// The start menu can be closed with space key
+		if (Input.GetKey ("space")) {
+			OnStartButtonClick ();
+		}
 
 		// The start menu can be opened again with esc key
 		if (Input.GetKey ("escape")) {
