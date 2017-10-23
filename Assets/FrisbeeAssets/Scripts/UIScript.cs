@@ -23,9 +23,10 @@ public class UIScript : MonoBehaviour {
 	void Update () {
 
 		// Clear the trail visualization when pressing space
-		if (Input.GetKey ("space")) {
+        // UPDATE: Don't need to clear trail here, handled in ModeHandler
+		/*if (Input.GetKey ("space")) {
 			frisbee.GetComponent<TrailRenderer> ().Clear();
-		}
+		}*/
 
 		// Changing the indicator text based on the isSeen() method
 		if (frisbeeScript.isSeen ()) {

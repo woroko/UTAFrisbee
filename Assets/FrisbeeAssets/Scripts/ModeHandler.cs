@@ -12,6 +12,7 @@ public class ModeHandler : MonoBehaviour {
 
     public GameObject frisbeeModel;
     public Renderer frisbeeMeshRenderer;
+    public TrailHandler trail;
     public Material recMaterial;
     public Material playMaterial;
     public float speed = 1F;
@@ -22,6 +23,7 @@ public class ModeHandler : MonoBehaviour {
     int animIndex = 0;
     float rateTimer = 0F;
     bool initPlayback = false;
+    bool transitioningToThrow = true;
 
 	//TESTING VARIABLES
 	public ThrowController throwController;
@@ -75,13 +77,24 @@ public class ModeHandler : MonoBehaviour {
             if (throwBuffer != null)
             {
                 initPlayback = true;
+                transitioningToThrow = true;
                 frisbeeMeshRenderer.sharedMaterial = playMaterial;
+                // deactivate trail during playback looping
+                trail.Deactivate();
+                //Debug.Log("Detached trail!");
             }
             //Debug.Log("Init playback!");
             pauseUntil = Time.time + 1.5F; //Slight pause before starting playback
 		}
         else if (throwController.Throwing())
         {
+            if (transitioningToThrow)
+            {
+                transitioningToThrow = false;
+                trail.Reset(); // clear trail for new throw
+                trail.Activate(); //reactivate trail
+                //Debug.Log("Attached trail!");
+            }
             initPlayback = false;
             frisbeeMeshRenderer.sharedMaterial = recMaterial;
             frisbeeModel.transform.localRotation = throwController.getCurrentRot();
