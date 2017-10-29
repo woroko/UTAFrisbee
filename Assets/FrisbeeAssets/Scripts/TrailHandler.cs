@@ -4,12 +4,16 @@ using UnityEngine;
 
 public class TrailHandler : MonoBehaviour {
 
-    public TrailRenderer trailRenderer;
+    //public TrailRenderer trailRenderer;
     public Transform follow;
     bool trailActive = false;
 
+	public float trailSize;
+	List<GameObject> trailPieces;
+
     void Start()
     {
+		trailPieces = new List<GameObject>();
     }
 
     void Update()
@@ -17,7 +21,17 @@ public class TrailHandler : MonoBehaviour {
 
         if (trailActive == true)
         {
-            trailRenderer.transform.position = follow.localPosition;
+			GameObject trailPiece = GameObject.CreatePrimitive (PrimitiveType.Sphere);
+
+			trailPiece.transform.localScale = new Vector3(trailSize, trailSize, trailSize);
+			trailPiece.transform.position = follow.localPosition;
+
+			trailPiece.GetComponent<Renderer> ().material.color = Color.red;
+			trailPiece.AddComponent<TrailPieceScript> ();
+
+			trailPieces.Add(trailPiece);
+
+			//trailRenderer.transform.position = follow.localPosition;
         }
 
     }
@@ -34,6 +48,12 @@ public class TrailHandler : MonoBehaviour {
 
     public void Reset()
     {
-        trailRenderer.Clear();
+		trailPieces.ForEach (delegate(GameObject piece) {
+			Destroy (piece);
+		});
+
+		trailPieces.Clear ();
+
+        //trailRenderer.Clear();
     }
 }
