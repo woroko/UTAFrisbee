@@ -9,6 +9,8 @@ public class UIScript : MonoBehaviour {
 	private GameObject frisbee;
 	private CustomRigidBody frisbeeScript;
 
+    public ModeHandler modeHandler;
+
 	public Text recordingIndicator;
 	public Text frisbeePosition;
 	public Text frisbeeRotation;
@@ -37,6 +39,6 @@ public class UIScript : MonoBehaviour {
 
 		// Testing out showing the frisbee position and rotation on screen
 		frisbeePosition.text = "Position: " + frisbee.transform.localPosition;
-		frisbeeRotation.text = "Rotation: " + frisbee.transform.localRotation;
+		frisbeeRotation.text = "Playback Speed: " + modeHandler.speed + "x";
 	}
 }

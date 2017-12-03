@@ -77,11 +77,7 @@ public class ModeHandler : MonoBehaviour {
         {
             if (speed >= 1.0F)
             {
-                speed = speed + 0.5F;
-            }
-            if (speed >= 4.5F)
-            {
-                speed = 0.25F;
+                speed = 0.0F;
             }
             if (speed < 1.0F)
             {
