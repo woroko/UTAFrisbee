@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 [System.Serializable]
 public class Threshold {
-	public float throwing, holding, ending, glitch;
+	public float throwing, holding, ending, glitch, throwStartZ;
     //recommend 0.2, 0.05, 1.2, 5
 }
 
@@ -22,6 +22,8 @@ public class ThrowController : MonoBehaviour {
 	public Threshold threshold;
 
 	public Transform trackingTarget;
+
+    public CustomRigidBody customRB;
 
 	//UI
 	public Text modeText;
@@ -75,16 +77,23 @@ public class ThrowController : MonoBehaviour {
      * 
 	 */
 	void Update() {
+
+        if (Input.GetKeyDown("r"))
+        {
+            throwMode = 0;
+        }
+
         Vector3 currentPosition = new Vector3 (trackingTarget.position.x, trackingTarget.position.y, trackingTarget.position.z);
+
 
         //add current FrisbeeLocation to back of queue
         //buffer has not yet reached full capacity
         if (captureBuffer.Count < BUFFERCAPACITY-1)
-            captureBuffer.Add(new FrisbeeLocation(trackingTarget.localRotation, trackingTarget.localPosition, Time.time));
+            captureBuffer.Add(new FrisbeeLocation(trackingTarget.localRotation, trackingTarget.localPosition, Time.time, customRB.isSeen()));
         else //buffer has reached BUFFERCAPACITY
         {
             captureBuffer.RemoveFront(); //remove oldest FrisbeeLocation
-            captureBuffer.Add(new FrisbeeLocation(trackingTarget.localRotation, trackingTarget.localPosition, Time.time));
+            captureBuffer.Add(new FrisbeeLocation(trackingTarget.localRotation, trackingTarget.localPosition, Time.time, customRB.isSeen()));
         }
         
 
@@ -148,15 +157,16 @@ public class ThrowController : MonoBehaviour {
     void HandleModeChanges (Vector3 position)
 	{
         //calc difference between current position and position throwDetectionTime seconds before present in buffer
-        float difference = Vector3.Distance(position, getPosAtTime(captureBuffer, Time.time - throwDetectionTime));//(shortAndLongDif - nowAndShortDif);
+        //float difference = Vector3.Distance(position, getPosAtTime(captureBuffer, Time.time - throwDetectionTime));//(shortAndLongDif - nowAndShortDif);
+        float difference = position.z - getPosAtTime(captureBuffer, Time.time - throwDetectionTime).z;
 
         //threshold.glitch hack to ignore DebugMover abrupt position jump
         //detect throw start if position difference in throwDetectionTime is above throwing threshold
         //also includes rudimentary check for z-safezone
-		if (WaitingForThrow() && difference > threshold.throwing && difference < threshold.glitch && position.z < 1F) {
+        if (WaitingForThrow() && difference > threshold.throwing && difference < threshold.glitch && position.z < 1F) {
 			HandleThrow(position);
 		}
-		else if (InPlayback () && Time.time > nextThrow && difference < threshold.holding) {
+		else if (InPlayback () && Time.time > nextThrow && position.z < threshold.throwStartZ && difference < threshold.holding) {
             throwMode = 1;
             Debug.Log("Waiting for throw...");
 		} 
@@ -182,6 +192,7 @@ public class ThrowController : MonoBehaviour {
 
         //get first FrisbeeLocation in throw
         FrisbeeLocation temp = captureBuffer.Get(firstThrowIndex);
+        FrisbeeLocation prev = null;
 
         throwStartPos = temp.pos;
         throwStartTime = temp.time;
@@ -197,9 +208,16 @@ public class ThrowController : MonoBehaviour {
             temp = captureBuffer.Get(i);
             //manually initialize first timestamp to zero
             if (i == firstThrowIndex)
-                throwBuffer.Add(new FrisbeeLocation(temp.rot, temp.pos, 0F));
-            else //rest of the timestamps will increment from zero
-                throwBuffer.Add(new FrisbeeLocation(temp.rot, temp.pos, temp.time - throwStartTime));
+                throwBuffer.Add(new FrisbeeLocation(temp.rot, temp.pos, 0F, 0F, 0F, temp.wasSeen));
+            else
+            { //rest of the timestamps will increment from zero
+                prev = throwBuffer[throwBuffer.Count - 1];
+                float currentThrowTime = temp.time - throwStartTime;
+                float fSpeed = Vector3.Distance(temp.pos, prev.pos) / (currentThrowTime - prev.time);
+                float rSpeed = (Mathf.Abs(temp.rot.eulerAngles.y -  prev.rot.eulerAngles.y)/360F) / (currentThrowTime - prev.time);
+                rSpeed = rSpeed * 60F;
+                throwBuffer.Add(new FrisbeeLocation(temp.rot, temp.pos, currentThrowTime, fSpeed, rSpeed, temp.wasSeen));
+            }
         }
         
 
@@ -209,8 +227,8 @@ public class ThrowController : MonoBehaviour {
     //Detect if z-distance from beginning of throw is greater than ending threshold (virtual wall)
 	void HandleEnd (Vector3 position)
 	{
-		if ((position.z - throwStartPos.z) > threshold.ending) {
-			Debug.Log ("hit max throw z-distance at: " + position + " z-dist: " + (position.z - throwStartPos.z));
+		if (position.z > threshold.ending) {
+			Debug.Log ("hit max throw z-distance at: " + position);
 			throwMode = 0;
             nextThrow = Time.time + throwRate;
         }

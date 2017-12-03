@@ -16,14 +16,16 @@ public class ModeHandler : MonoBehaviour {
     public Material recMaterial;
     public Material playMaterial;
     public float speed = 1F;
+    public FrisbeeLocation current = null;
 	    
-	const int FIRSTROW = 7; //csv first row
-
     List<FrisbeeLocation> throwBuffer;
     int animIndex = 0;
     float rateTimer = 0F;
     bool initPlayback = false;
     bool transitioningToThrow = true;
+
+    public float currentRotSpeed = 0F;
+    public float currentForwardSpeed = 0F;
 
 	//TESTING VARIABLES
 	public ThrowController throwController;
@@ -71,8 +73,24 @@ public class ModeHandler : MonoBehaviour {
 
     // called every frame
     void Update () {
+        if (Input.GetKeyDown("s"))
+        {
+            if (speed >= 1.0F)
+            {
+                speed = speed + 0.5F;
+            }
+            if (speed >= 4.5F)
+            {
+                speed = 0.25F;
+            }
+            if (speed < 1.0F)
+            {
+                speed = speed + 0.25F;
+            }
+        }
+
         // Copy throwbuffer to ModeHandler
-		if ((throwController.InPlayback() || throwController.WaitingForThrow()) && !initPlayback) {
+        if ((throwController.InPlayback() || throwController.WaitingForThrow()) && !initPlayback) {
             throwBuffer = throwController.getThrowBuffer();
             if (throwBuffer != null)
             {
@@ -112,8 +130,16 @@ public class ModeHandler : MonoBehaviour {
 		if (animIndex < throwBuffer.Count-1 && animIndex >= 0) {
 			if (throwBuffer[animIndex] != null) {
 				FrisbeeLocation location = throwBuffer[animIndex];
-				frisbeeModel.transform.localRotation = location.rot;
+                if (animIndex % 2 == 0)
+                {
+                    Debug.Log("Frisbee Rot Speed: " + location.rotSpeed);
+                    Debug.Log("Frisbee Forward Speed: " + location.forwardSpeed);
+                }
+                frisbeeModel.transform.localRotation = location.rot;
 				frisbeeModel.transform.localPosition = location.pos;
+                current = location;
+                //currentForwardSpeed = location.forwardSpeed;
+                //currentRotSpeed = location.rotSpeed;
 			}
             rateTimer += Time.deltaTime * speed;
             animIndex = getListIndexFromTime(throwBuffer, rateTimer);

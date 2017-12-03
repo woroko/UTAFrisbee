@@ -44,14 +44,14 @@ public class CustomRigidBody : MonoBehaviour
     FrisbeeLocation getCurrentFrisbeeLocation()
     {
         if (rbState != null)
-            return new FrisbeeLocation(rbState.Pose.Orientation, rbState.Pose.Position, Time.time);
+            return new FrisbeeLocation(rbState.Pose.Orientation, rbState.Pose.Position, Time.time, isSeen());
         else
             return null;
     }
     //TODO: UI Team: Implement isSeen indicator according to #8
     public bool isSeen()
     {
-        if (rbState == null)
+        if (rbState == null || OptitrackHiResTimer.Now().SecondsSince(rbState.DeliveryTimestamp) > 0.1)
             return false;
         else
             return true;

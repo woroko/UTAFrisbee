@@ -6,6 +6,7 @@ public class TrailHandler : MonoBehaviour {
 
     //public TrailRenderer trailRenderer;
     public Transform follow;
+    public ModeHandler modeHandler;
     bool trailActive = false;
 
 	public float trailSize;
@@ -24,12 +25,15 @@ public class TrailHandler : MonoBehaviour {
 			GameObject trailPiece = GameObject.CreatePrimitive (PrimitiveType.Sphere);
 
 			trailPiece.transform.localScale = new Vector3(trailSize, trailSize, trailSize);
-			trailPiece.transform.position = follow.localPosition;
+            trailPiece.transform.position = follow.localPosition;
+            //trailPiece.transform.position = modeHandler.current.pos;
 
-			trailPiece.GetComponent<Renderer> ().material.color = Color.red;
+            trailPiece.GetComponent<Renderer> ().material.color = Color.red;
 			trailPiece.AddComponent<TrailPieceScript> ();
+            //trailPiece.GetComponent<TrailPieceScript>().rotSpeed = modeHandler.current.rotSpeed;
+            //trailPiece.GetComponent<TrailPieceScript>().forwardSpeed = modeHandler.current.forwardSpeed;
 
-			trailPieces.Add(trailPiece);
+            trailPieces.Add(trailPiece);
 
 			//trailRenderer.transform.position = follow.localPosition;
         }
