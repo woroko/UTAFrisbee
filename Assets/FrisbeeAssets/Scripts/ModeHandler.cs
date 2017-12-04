@@ -93,9 +93,13 @@ public class ModeHandler : MonoBehaviour {
                 initPlayback = true;
                 transitioningToThrow = true;
                 frisbeeMeshRenderer.sharedMaterial = playMaterial;
-                // deactivate trail during playback looping
-                trail.Deactivate();
-                //Debug.Log("Detached trail!");
+
+                // deprecated
+                //trail.Deactivate();
+				//Debug.Log("Detached trail!");
+
+				// Create trail in the beginning of playback loop
+				trail.Create(throwBuffer);
             }
             //Debug.Log("Init playback!");
             pauseUntil = Time.time + 1.5F; //Slight pause before starting playback
@@ -106,7 +110,9 @@ public class ModeHandler : MonoBehaviour {
             {
                 transitioningToThrow = false;
                 trail.Reset(); // clear trail for new throw
-                trail.Activate(); //reactivate trail
+
+				// deprecated
+                //trail.Activate();
                 //Debug.Log("Attached trail!");
             }
             initPlayback = false;
