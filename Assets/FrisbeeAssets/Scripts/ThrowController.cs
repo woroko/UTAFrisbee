@@ -33,7 +33,7 @@ public class ThrowController : MonoBehaviour {
 	private float nextThrow;
 
 
-	private int throwMode; //0 = playback , 1 = waiting for throw + playback , 2 = throw
+	private static int throwMode; //0 = playback , 1 = waiting for throw + playback , 2 = throw
 
 	// position that throw started
     Vector3 throwStartPos;
@@ -256,7 +256,7 @@ public class ThrowController : MonoBehaviour {
 	}
 
 	//shorthand
-	public int GetMode () 
+	public static int GetMode () 
 	{
 		return throwMode;
 	}
