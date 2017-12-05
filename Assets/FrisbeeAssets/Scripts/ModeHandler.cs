@@ -135,7 +135,7 @@ public class ModeHandler : MonoBehaviour {
                 if (animIndex % 2 == 0)
                 {
                     Debug.Log("Frisbee Rot Speed: " + location.rotSpeed);
-                    Debug.Log("Frisbee Forward Speed: " + location.forwardSpeed);
+                    //Debug.Log("Frisbee Forward Speed: " + location.forwardSpeed);
                 }
                 frisbeeModel.transform.localRotation = location.rot;
 				frisbeeModel.transform.localPosition = location.pos;

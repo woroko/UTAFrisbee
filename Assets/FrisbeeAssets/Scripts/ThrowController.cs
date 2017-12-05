@@ -104,7 +104,19 @@ public class ThrowController : MonoBehaviour {
 		HandleModeChanges(currentPosition);
         if(Throwing())
         {
-            throwBuffer.Add(new FrisbeeLocation(trackingTarget.localRotation, trackingTarget.localPosition, Time.time-throwStartTime));
+            //deprecated:
+            //throwBuffer.Add(new FrisbeeLocation(trackingTarget.localRotation, trackingTarget.localPosition, Time.time-throwStartTime));
+            FrisbeeLocation temp = captureBuffer.Get(captureBuffer.Count - 1);
+            FrisbeeLocation prev = captureBuffer.Get(captureBuffer.Count - 1 - 2);
+            float currentThrowTime = temp.time - throwStartTime;
+            float prevThrowTime = prev.time - throwStartTime;
+            float fSpeed = Vector3.Distance(temp.pos, prev.pos) / (currentThrowTime - prevThrowTime);
+            float a = (Quaternion.Inverse(prev.rot) * temp.rot).eulerAngles.y;
+            float b = (Quaternion.Inverse(temp.rot) * prev.rot).eulerAngles.y;
+
+            float rSpeed = Mathf.Abs((Mathf.Min(a,b) / 360F) / (currentThrowTime - prevThrowTime));
+            rSpeed = rSpeed * 60F;
+            throwBuffer.Add(new FrisbeeLocation(temp.rot, temp.pos, currentThrowTime, fSpeed, rSpeed, temp.wasSeen));
         }
 
 		SetModeText();
@@ -211,14 +223,22 @@ public class ThrowController : MonoBehaviour {
                 throwBuffer.Add(new FrisbeeLocation(temp.rot, temp.pos, 0F, 0F, 0F, temp.wasSeen));
             else
             { //rest of the timestamps will increment from zero
-                prev = throwBuffer[throwBuffer.Count - 1];
+                if (i-firstThrowIndex>=2)
+                    prev = throwBuffer[throwBuffer.Count - 2];
+                else
+                    prev = throwBuffer[throwBuffer.Count - 1];
                 float currentThrowTime = temp.time - throwStartTime;
                 float fSpeed = Vector3.Distance(temp.pos, prev.pos) / (currentThrowTime - prev.time);
-                float rSpeed = (Mathf.Abs(temp.rot.eulerAngles.y -  prev.rot.eulerAngles.y)/360F) / (currentThrowTime - prev.time);
+                float a = (Quaternion.Inverse(prev.rot) * temp.rot).eulerAngles.y;
+                float b = (Quaternion.Inverse(temp.rot) * prev.rot).eulerAngles.y;
+
+                float rSpeed = Mathf.Abs((Mathf.Min(a,b)/360F) / (currentThrowTime - prev.time));
                 rSpeed = rSpeed * 60F;
                 throwBuffer.Add(new FrisbeeLocation(temp.rot, temp.pos, currentThrowTime, fSpeed, rSpeed, temp.wasSeen));
             }
+            Debug.Log("ThrowBuffer: " + throwBuffer[throwBuffer.Count - 1].rotSpeed.ToString());
         }
+        
         
 
 
