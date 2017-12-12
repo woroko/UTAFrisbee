@@ -4,84 +4,58 @@ using UnityEngine;
 
 public class TrailHandler : MonoBehaviour {
 
-    //public TrailRenderer trailRenderer;
-    //public Transform follow;
-    //public ModeHandler modeHandler;
-    //bool trailActive = false;
-
+	// Variable for the width of the trail pieces
 	public float trailSize;
+
+	// List of trail piece objects
 	List<GameObject> trailPieces;
 
-    void Start()
-    {
+    void Start() {
+
+		// Initialize the list
 		trailPieces = new List<GameObject>();
     }
-		
-	/* deprecated methods
 
-    void Update()
-    {
-
-        if (trailActive == true)
-        {
-			GameObject trailPiece = GameObject.CreatePrimitive (PrimitiveType.Sphere);
-
-			trailPiece.transform.localScale = new Vector3(trailSize, trailSize, trailSize);
-            trailPiece.transform.position = follow.localPosition;
-            //trailPiece.transform.position = modeHandler.current.pos;
-
-            trailPiece.GetComponent<Renderer> ().material.color = Color.red;
-			trailPiece.AddComponent<TrailPieceScript> ();
-            //trailPiece.GetComponent<TrailPieceScript>().rotSpeed = modeHandler.current.rotSpeed;
-            //trailPiece.GetComponent<TrailPieceScript>().forwardSpeed = modeHandler.current.forwardSpeed;
-
-            trailPieces.Add(trailPiece);
-
-			//trailRenderer.transform.position = follow.localPosition;
-        }
-
-    }
-
-    public void Activate()
-    {
-        trailActive = true;
-    }
-
-    public void Deactivate()
-    {
-        trailActive = false;
-    }
-
-    */
-
+	// Function to create the trail (called in ModeHandler after a throw is completed).
+	// The parameter, buffer, is a list of frisbee positions (x, y, z)
 	public void Create(List<FrisbeeLocation> buffer) {
 
-		buffer.ForEach (delegate(FrisbeeLocation location) {
-			
+		// Create a piece for every 5th position in the buffer (to avoid lag issues)
+		for (int i = 0; i < buffer.Count; i += 5) {
+
+			// Create an empty sphere object for the trail pieces
 			GameObject trailPiece = GameObject.CreatePrimitive (PrimitiveType.Sphere);
 
+			// Set the width of the trail pieces to trailSize
 			trailPiece.transform.localScale = new Vector3(trailSize, trailSize, trailSize);
-			trailPiece.transform.position = location.pos;
 
+			// Place the trail pieces at a position from the buffer
+			trailPiece.transform.position = buffer[i].pos;
+
+			// Set the trail pieces' color to red
 			trailPiece.GetComponent<Renderer> ().material.color = Color.red;
+
+			// Add a script component for the trail piece (for mouse hovering functionality)
 			trailPiece.AddComponent<TrailPieceScript> ();
 
-			trailPiece.GetComponent<TrailPieceScript>().rotSpeed = location.rotSpeed;
-			trailPiece.GetComponent<TrailPieceScript>().forwardSpeed = location.forwardSpeed;
+			// Set the mouse hover text to speed data from the buffer
+			trailPiece.GetComponent<TrailPieceScript>().rotSpeed = buffer[i].rotSpeed;
+			trailPiece.GetComponent<TrailPieceScript>().forwardSpeed = buffer[i].forwardSpeed;
 
+			// Add the trail piece to the list
 			trailPieces.Add(trailPiece);
-		});
+		}
 	}
 
-    public void Reset()
-    {
-		// This part seems to be causing a lot of lag, might need to rework it at some point
-		trailPieces.ForEach (delegate(GameObject piece) {
-			Destroy (piece);
-		});
+	// Function to reset the trail (called in ModeHandler at the beginning of new throw)
+    public void Reset() {
 
+		// Destroy every trail piece object in the list (this can cause a lag spike)
+		for (int i = 0; i < trailPieces.Count; i++) {
+			Destroy (trailPieces [i]);
+		}
+
+		// Clear the list
 		trailPieces.Clear ();
-
-        //trailRenderer.Clear();
     }
 }
