@@ -7,6 +7,9 @@ public class TrailHandler : MonoBehaviour {
 	// Variable for the width of the trail pieces
 	public float trailSize;
 
+	// Variable for the number of trail pieces drawn (100 = all, 20 = every fifth, etc.)
+	public float trailFrequency;
+
 	// List of trail piece objects
 	List<GameObject> trailPieces;
 
@@ -20,8 +23,8 @@ public class TrailHandler : MonoBehaviour {
 	// The parameter, buffer, is a list of frisbee positions (x, y, z)
 	public void Create(List<FrisbeeLocation> buffer) {
 
-		// Create a piece for every 5th position in the buffer (to avoid lag issues)
-		for (int i = 0; i < buffer.Count; i += 5) {
+		// Create a piece for every nth position in the buffer, based on the frequency
+		for (int i = 0; i < buffer.Count; i += (int)(100/trailFrequency)) {
 
 			// Create an empty sphere object for the trail pieces
 			GameObject trailPiece = GameObject.CreatePrimitive (PrimitiveType.Sphere);
