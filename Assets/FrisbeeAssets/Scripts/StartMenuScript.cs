@@ -16,9 +16,16 @@ public class StartMenuScript : MonoBehaviour {
 	public GameObject mainButtons;
 
 	// Main buttons
+	public Button howToButton;
 	public Button startButton;
 	public Button settingsButton;
 	public Button quitButton;
+
+	// An empty object that is parent to the how-to view objects
+	public GameObject howTo;
+
+	// Button to return from the how-to view
+	public Button returnButton;
 
 	// An empty object that is parent to all the setting sliders
 	public GameObject settingSliders;
@@ -37,9 +44,12 @@ public class StartMenuScript : MonoBehaviour {
 		Time.timeScale = 0F;
 
 		// Set click actions for all the buttons and sliders (see functions below)
+		howToButton.GetComponent<Button> ().onClick.AddListener(OnHowToButtonClick);
 		startButton.GetComponent<Button> ().onClick.AddListener(OnStartButtonClick);
 		settingsButton.GetComponent<Button> ().onClick.AddListener(OnSettingsButtonClick);
 		quitButton.GetComponent<Button> ().onClick.AddListener(OnQuitButtonClick);
+
+		returnButton.GetComponent<Button> ().onClick.AddListener(OnReturnButtonClick);
 
 		backtrackSlider.GetComponent<Slider> ().onValueChanged.AddListener(OnBacktrackSliderChange);
 		detectionSlider.GetComponent<Slider> ().onValueChanged.AddListener(OnDetectionSliderChange);
@@ -72,6 +82,19 @@ public class StartMenuScript : MonoBehaviour {
 	// Click actions for main buttons
 	//
 
+	// Button to open the how-to instructions
+	void OnHowToButtonClick() {
+
+		// Hide the main menu buttons
+		mainButtons.SetActive(false);
+
+		// Change the title text to how-to
+		startMenuTitle.text = "How to throw";
+
+		// Show the how-to view
+		howTo.SetActive(true);
+	}
+
 	// Button to start the application
 	void OnStartButtonClick() {
 
@@ -103,6 +126,22 @@ public class StartMenuScript : MonoBehaviour {
 
 		// Debug for testing the button in the editor
 		Debug.Log ("Quit button pressed");
+	}
+
+	//
+	// Click actions for the how-to view buttons
+	//
+
+	void OnReturnButtonClick() {
+
+		// Hide the how-to view
+		howTo.SetActive(false);
+
+		// Change the title text back to the actual title text
+		startMenuTitle.text = "Frisbee Visualizer 2018";
+
+		// Show the main menu buttons
+		mainButtons.SetActive(true);
 	}
 
 	//
