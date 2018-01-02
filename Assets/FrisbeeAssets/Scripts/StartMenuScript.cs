@@ -27,14 +27,17 @@ public class StartMenuScript : MonoBehaviour {
 	// Button to return from the how-to view
 	public Button returnButton;
 
-	// An empty object that is parent to all the setting sliders
+	// An empty object that is parent to all the setting controls
 	public GameObject settingSliders;
 
-	// Setting sliders, plus a button to "save" settings
+	// Setting sliders and their default values
 	public Slider backtrackSlider;
 	public Slider detectionSlider;
 	public Slider rateSlider;
 	public Slider trailSlider;
+
+	// Buttons to reset settings to default or save them
+	public Button defaultButton;
 	public Button saveButton;
 
 	// Use this for initialization
@@ -56,6 +59,7 @@ public class StartMenuScript : MonoBehaviour {
 		rateSlider.GetComponent<Slider> ().onValueChanged.AddListener(OnRateSliderChange);
 		trailSlider.GetComponent<Slider> ().onValueChanged.AddListener(OnTrailSliderChange);
 
+		defaultButton.GetComponent<Button> ().onClick.AddListener(OnDefaultButtonClick);
 		saveButton.GetComponent<Button> ().onClick.AddListener(OnSaveButtonClick);
 	}
 
@@ -182,6 +186,22 @@ public class StartMenuScript : MonoBehaviour {
 
 		// Update the value text next to the slider
 		trailSlider.GetComponentsInChildren<Text> ()[1].text = value.ToString() + " %";
+	}
+
+	// Resets the settings back to default values
+	void OnDefaultButtonClick() {
+
+		OnBacktrackSliderChange (1.0F);
+		backtrackSlider.value = 1.0F;
+
+		OnDetectionSliderChange (0.5F);
+		detectionSlider.value = 0.5F;
+
+		OnRateSliderChange (4.0F);
+		rateSlider.value = 4.0F;
+
+		OnTrailSliderChange (20.0F);
+		trailSlider.value = 20.0F;
 	}
 
 	// Note: the settings are saved when using the sliders, not when pressing the save button.
