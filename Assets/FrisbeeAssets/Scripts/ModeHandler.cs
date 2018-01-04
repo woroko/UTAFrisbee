@@ -144,9 +144,9 @@ public class ModeHandler : MonoBehaviour {
                 //currentRotSpeed = location.rotSpeed;
 			}
             rateTimer += Time.deltaTime * speed;
-            animIndex = getListIndexFromTime(throwBuffer, rateTimer);
+            animIndex = getListIndexFromTime(throwBuffer, rateTimer, animIndex);
 		} else {
-			animIndex = 0;
+			animIndex = 1;
 			rateTimer = 0F;
             pauseUntil = Time.time + 1.0F;
 		}
