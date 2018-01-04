@@ -1,0 +1,173 @@
+﻿Test case: 
+
+   Throwing a frisbee
+
+Primary actors: 
+
+   User, frisbee, motion capture system
+
+Preconditions: 
+
+   The frisbee has trackers on it
+	check
+
+   The motion capture system is ready
+	check
+
+Basic flow: 
+
+   1. User checks the throw direction from the screen.
+	check
+   2. User throws the frisbee in the correct direction.
+	check
+   3. The motion capture system tracks the frisbee's flight.
+	check
+   4. The screen automatically switches to flight view.
+	check
+   5. Real-time information about the flight is printed on the screen.
+	check
+   6. The frisbee hits a wall or a net.
+	check
+   7. The screen automatically switches to analysis view.
+	check
+Alternate flows: 
+
+   2a. The user throws the frisbee in a completely wrong direction.
+      2a1. The screen displays an error message.
+		Nothing happens if throw wrong direction. 
+   3a. The motion capture system is unable to track the frisbee.
+      3a1. The screen displays an error message.
+		????????
+   5a. Real-time information is unavailable.
+      5a1. The screen displays a default flight view, without the extra information.
+		???????
+   6a. The frisbee doesn't hit a wall or a net.
+      6a1. Expensive equipment may now be broken.
+		May be, throw recording doesn't stop until it reaches correct ending position 
+----------------------------------------------------------------------------------------
+
+Test case: 
+
+   Analyzing the frisbee throw
+
+Primary actors: 
+
+   User, system
+
+Preconditions: 
+
+   The frisbee has been thrown successfully
+
+   The system has switched to analysis view
+
+Basic flow: 
+
+   1. The screen displays the frisbee's actual flight path contrasted to the correct one.
+	check
+   2. User hovers the cursor over some point in the flight path.
+	check
+   3. The screen displays additional information for that specific point.
+	check
+   4. The entire flight animation is played in real time.
+	check
+   5. User prepares for a new throw
+	check
+   6. The system recognizes this
+	check
+   7. The screen shows it program is ready for a new throw
+	check
+	
+Alternate flows: 
+
+   1a. The flight path is unavailable.
+      1a1. The screen displays an error message.
+		uncheck
+   1b. The flight path is incomplete.
+      1b1. The screen displays the parts that it can.
+		check
+   5a. Additional information is unavailable for some points.
+      5a1. The screen displays an error tooltip for those points.
+		?????????
+   7a. The flight animation is unavailable.
+      7a1. The screen displays the parts that it can.
+		check
+   9a. The system does not recognize a new throw is about to start.
+      9a1. Shows by message that new throw isn't ready to start
+		check
+		
+
+-------------------------------------------------------------------------------------
+
+
+Test case:
+
+  Starting the application
+
+
+
+Primary actors:
+
+
+
+  User, frisbee, motion capture system
+
+
+
+Preconditions:
+
+
+
+  The frisbee has trackers on it and frisbee is in the correct spot
+
+  The motion capture system is ready
+
+
+
+Basic flow:
+
+
+  1. User starts the application.
+  2. User checks from screen that the frisbee can be tracked
+		check
+
+
+Alternate flows:
+
+  2a. The frisbee can’t be tracked.
+     2a1. The screen displays an error message.
+		check
+
+-------------------------------------------------------------------------------
+
+Test case:
+  
+  Setting up the motion capture system
+
+
+Primary actors:
+  
+  User, Motive, the program
+
+
+Preconditions:
+  
+  Motive and the OptiTrack™ infrared cameras are installed and work
+
+
+Basic flow:
+
+  1. User attaches an OptiTrack™ Rigidbody component to the frisbee in Motive.
+	check
+  2. User places the origin point of Motive to a reasonable spot in the middle of the space.
+	check
+  3. User launches the application.
+	check
+
+Alternate flows:
+  
+  2a. The origin point is displaced (e.g. inside a wall).
+   2a1. The application never enters throwing mode because the starting position is now displaced.
+   2a2. The application displays a warning.
+	check
+
+

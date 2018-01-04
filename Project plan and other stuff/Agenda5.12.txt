@@ -1,0 +1,14 @@
+Meeting objectives: review project
+
+date, time: 5.12.2017, 04:00 pm
+
+Location: Pinni B 2032
+
+Topics:
+    -Overview of iteration
+    -Overviewing implementations
+    -Demonstrating implementations
+    -Working hours
+    -Issues
+    -What next
+    -Next meeting
