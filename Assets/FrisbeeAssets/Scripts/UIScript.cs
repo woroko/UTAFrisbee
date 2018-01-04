@@ -35,15 +35,15 @@ public class UIScript : MonoBehaviour {
 		}*/
 
         if (frisbeeScript.isSeen())
-            isSeenText.text = "Can see frisbee: true";
+            isSeenText.text = "";
         else
-            isSeenText.text = "Can see frisbee: false";
+            isSeenText.text = "Can't see fisbee!";
 
         // Changing the indicator text based on the throwmode
         int throwmode = ThrowController.GetMode();
         // Get fresbee back to throwing position & playing your throw
         if (throwmode == 0) {
-            recordingIndicator.color = Color.red;
+            recordingIndicator.color = Color.white;
             if (firstThrow == true) 
                 recordingIndicator.text = "Get frisbee to starting position";
             else
@@ -53,18 +53,18 @@ public class UIScript : MonoBehaviour {
         // Ready to throw
         else if (throwmode == 1) {
             if (frisbeeScript.isSeen()) {
-                recordingIndicator.color = Color.green;
+                recordingIndicator.color = Color.white;
                 if (firstThrow == true)
                     recordingIndicator.text = "Ready for a new throw";
                 else
                     recordingIndicator.text = "Ready for a new throw (Playing your last throw)";
             }
             else {
-                recordingIndicator.color = Color.red;
+                recordingIndicator.color = Color.white;
                 if (firstThrow == true)
-                    recordingIndicator.text = "Can't see frisbee, don't throw yet";
+                    recordingIndicator.text = "Don't throw yet";
                 else
-                    recordingIndicator.text = "Can't see frisbee, don't throw yet (Playing your last throw)";
+                    recordingIndicator.text = "Don't throw yet (Playing your last throw)";
             }
         }
 
