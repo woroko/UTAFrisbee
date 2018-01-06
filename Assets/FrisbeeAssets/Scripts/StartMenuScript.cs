@@ -30,15 +30,23 @@ public class StartMenuScript : MonoBehaviour {
 	// An empty object that is parent to all the setting controls
 	public GameObject settingSliders;
 
-	// Setting sliders and their default values
+	// Setting sliders
 	public Slider backtrackSlider;
 	public Slider detectionSlider;
 	public Slider rateSlider;
 	public Slider trailSlider;
 
+	// Setting Toggles 
+	public Toggle terrainToggle;
+	public Toggle lineToggle;
+
 	// Buttons to reset settings to default or save them
 	public Button defaultButton;
 	public Button saveButton;
+
+	// Materials to use in the terrain toggle setting
+	public Material grassyTerrain;
+	public Material simpleTerrain;
 
 	// Use this for initialization
 	void Start () {
@@ -58,6 +66,9 @@ public class StartMenuScript : MonoBehaviour {
 		detectionSlider.GetComponent<Slider> ().onValueChanged.AddListener(OnDetectionSliderChange);
 		rateSlider.GetComponent<Slider> ().onValueChanged.AddListener(OnRateSliderChange);
 		trailSlider.GetComponent<Slider> ().onValueChanged.AddListener(OnTrailSliderChange);
+
+		terrainToggle.GetComponent<Toggle> ().onValueChanged.AddListener (OnTerrainToggleChange);
+		lineToggle.GetComponent<Toggle> ().onValueChanged.AddListener (OnLineToggleChange);
 
 		defaultButton.GetComponent<Button> ().onClick.AddListener(OnDefaultButtonClick);
 		saveButton.GetComponent<Button> ().onClick.AddListener(OnSaveButtonClick);
@@ -188,6 +199,49 @@ public class StartMenuScript : MonoBehaviour {
 		trailSlider.GetComponentsInChildren<Text> ()[1].text = value.ToString() + " %";
 	}
 
+	void OnTerrainToggleChange(bool value) {
+
+		// Get the terrain game object
+		GameObject terrain = GameObject.Find ("Plane");
+
+		// User wants to see the grassy terrain
+		if (value == true) {
+
+			// Make the terrain wider
+			terrain.transform.localScale = new Vector3 (10, 1, 10);
+
+			// Set the terrain to grass
+			terrain.GetComponent<Renderer> ().material = grassyTerrain;
+		} 
+
+		// User hates the grassy terrain and wants it gone
+		else {
+
+			// Make the terrain smaller
+			terrain.transform.localScale = new Vector3 (1, 1, 1);
+
+			// Set the terrain to simple white glow
+			terrain.GetComponent<Renderer> ().material = simpleTerrain;
+		}
+	}
+
+	void OnLineToggleChange(bool value) {
+
+		// User wants to see the green line
+		if (value == true) {
+
+			// Set the line to active
+			GameObject.Find ("Line").GetComponent<LineRenderer> ().enabled = true;
+		}
+
+		// User doesn't want to see the green line
+		else {
+
+			// Set the line to inactive
+			GameObject.Find ("Line").GetComponent<LineRenderer> ().enabled = false;
+		}
+	}
+
 	// Resets the settings back to default values
 	void OnDefaultButtonClick() {
 
@@ -200,8 +254,14 @@ public class StartMenuScript : MonoBehaviour {
 		OnRateSliderChange (4.0F);
 		rateSlider.value = 4.0F;
 
-		OnTrailSliderChange (20.0F);
-		trailSlider.value = 20.0F;
+		OnTrailSliderChange (100.0F);
+		trailSlider.value = 100.0F;
+
+		OnTerrainToggleChange (true);
+		terrainToggle.isOn = true;
+
+		OnLineToggleChange (true);
+		lineToggle.isOn = true;
 	}
 
 	// Note: the settings are saved when using the sliders, not when pressing the save button.
