@@ -13,6 +13,8 @@ public class TrailHandler : MonoBehaviour {
 	// List of trail piece objects
 	List<GameObject> trailPieces;
 
+    public Color trailColor = Color.red;
+
     void Start() {
 
 		// Initialize the list
@@ -35,14 +37,15 @@ public class TrailHandler : MonoBehaviour {
 			// Place the trail pieces at a position from the buffer
 			trailPiece.transform.position = buffer[i].pos;
 
-			// Set the trail pieces' color to red
-			trailPiece.GetComponent<Renderer> ().material.color = Color.red;
+			// Set the trail pieces' color
+			trailPiece.GetComponent<Renderer> ().material.color = trailColor;
 
 			// Add a script component for the trail piece (for mouse hovering functionality)
 			trailPiece.AddComponent<TrailPieceScript> ();
 
-			// Set the mouse hover text to speed data from the buffer
-			trailPiece.GetComponent<TrailPieceScript>().rotSpeed = buffer[i].rotSpeed;
+            // Set the mouse hover text to speed data from the buffer
+            trailPiece.GetComponent<TrailPieceScript>().trailColor = trailColor;
+            trailPiece.GetComponent<TrailPieceScript>().rotSpeed = buffer[i].rotSpeed;
 			trailPiece.GetComponent<TrailPieceScript>().forwardSpeed = buffer[i].forwardSpeed;
 
 			// Add the trail piece to the list

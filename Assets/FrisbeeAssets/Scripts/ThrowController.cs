@@ -28,7 +28,7 @@ public class ThrowController : MonoBehaviour {
 	//UI
 	public Text modeText;
 
-	//delay between throws ( if the frisbee is laying in the net, don't start a new throw based off that stillness. )
+	//delay between throws ( if the frisbee is laying in the net, don't start a new throw )
 	public float throwRate;
 	private float nextThrow;
 
@@ -67,9 +67,6 @@ public class ThrowController : MonoBehaviour {
         Direct access would also be useful though, since we could detect isSeen()
         NOTE: Direct access now implemented in CustomRigidBody*/
 
-		//test for lab - could be used to make unity components less cluttered if works.
-		//OptitrackRigidBody orb = gameObject.GetComponent<OptitrackRigidBody>();
-		//Debug.Log ("orb==trackingtarget: "+(orb.transform == trackingTarget));
 	}
 
 	/*
@@ -104,8 +101,7 @@ public class ThrowController : MonoBehaviour {
 		HandleModeChanges(currentPosition);
         if(Throwing())
         {
-            //deprecated:
-            //throwBuffer.Add(new FrisbeeLocation(trackingTarget.localRotation, trackingTarget.localPosition, Time.time-throwStartTime));
+            // Throw has begun, add FrisbeeLocations to captureBuffer
             FrisbeeLocation temp = captureBuffer.Get(captureBuffer.Count - 1);
             FrisbeeLocation prev = captureBuffer.Get(captureBuffer.Count - 1 - 2);
             float currentThrowTime = temp.time - throwStartTime;
@@ -153,7 +149,7 @@ public class ThrowController : MonoBehaviour {
         else return -1; // did not find a FrisbeeLocation for time
     }
 
-    //finds the position frisbee position at (time) in the buffer
+    //finds the frisbee position at (time) in the buffer
     Vector3 getPosAtTime(Deque<FrisbeeLocation> queue, float time)
     {
         int idx = getBufferIndexFromTime(queue, time);
@@ -169,14 +165,13 @@ public class ThrowController : MonoBehaviour {
     void HandleModeChanges (Vector3 position)
 	{
         //calc difference between current position and position throwDetectionTime seconds before present in buffer
-        //float difference = Vector3.Distance(position, getPosAtTime(captureBuffer, Time.time - throwDetectionTime));//(shortAndLongDif - nowAndShortDif);
         float difference = position.z - getPosAtTime(captureBuffer, Time.time - throwDetectionTime).z;
 
         //threshold.glitch hack to ignore DebugMover abrupt position jump
         //detect throw start if position difference in throwDetectionTime is above throwing threshold
         //also includes rudimentary check for z-safezone
         if (WaitingForThrow() && difference > threshold.throwing && difference < threshold.glitch && position.z < 1F) {
-			HandleThrow(position);
+			HandleThrow();
 		}
 		else if (InPlayback () && Time.time > nextThrow && position.z < threshold.throwStartZ && difference < threshold.holding) {
             throwMode = 1;
@@ -185,17 +180,24 @@ public class ThrowController : MonoBehaviour {
 		else if (Throwing ()) {
 
             if (Time.frameCount % 50 == 0)
-                Debug.Log("airborne OR mid-throw, zpos: " + (position.z - throwStartPos.z));
+                Debug.Log("airborne OR mid-throw, zpos: " + (position.z - throwStartPos.z).ToString("F3"));
 
 			HandleEnd (position);
 
-			//maybe time limit too
+			//Maximum throw time limit is 10 seconds
+            if (Time.time - throwStartTime > 10F)
+            {
+                throwMode = 0;
+                nextThrow = Time.time + throwRate;
+            }
 		}
 
 
 	}
 
-	void HandleThrow (Vector3 position)
+    // Handles the backtracking and saves the part of the throw that happened
+    // before
+	void HandleThrow ()
 	{
         throwStartTime = Time.time - throwBacktrackingTime;
         int firstThrowIndex = getBufferIndexFromTime(captureBuffer, throwStartTime);
@@ -222,13 +224,15 @@ public class ThrowController : MonoBehaviour {
             if (i == firstThrowIndex)
                 throwBuffer.Add(new FrisbeeLocation(temp.rot, temp.pos, 0F, 0F, 0F, temp.wasSeen));
             else
-            { //rest of the timestamps will increment from zero
+            { 
                 if (i-firstThrowIndex>=2)
                     prev = throwBuffer[throwBuffer.Count - 2];
                 else
                     prev = throwBuffer[throwBuffer.Count - 1];
-                float currentThrowTime = temp.time - throwStartTime;
+                float currentThrowTime = temp.time - throwStartTime; //rest of the timestamps will increment from zero
                 float fSpeed = Vector3.Distance(temp.pos, prev.pos) / (currentThrowTime - prev.time);
+
+                //this is experimental, we are not absolutely sure if this is the correct way to calculate rpm
                 float a = (Quaternion.Inverse(prev.rot) * temp.rot).eulerAngles.y;
                 float b = (Quaternion.Inverse(temp.rot) * prev.rot).eulerAngles.y;
 
@@ -236,7 +240,7 @@ public class ThrowController : MonoBehaviour {
                 rSpeed = rSpeed * 60F;
                 throwBuffer.Add(new FrisbeeLocation(temp.rot, temp.pos, currentThrowTime, fSpeed, rSpeed, temp.wasSeen));
             }
-            Debug.Log("ThrowBuffer: " + throwBuffer[throwBuffer.Count - 1].rotSpeed.ToString());
+            //Debug.Log("ThrowBuffer: " + throwBuffer[throwBuffer.Count - 1].rotSpeed.ToString());
         }
         
         
@@ -244,7 +248,7 @@ public class ThrowController : MonoBehaviour {
 
 	}
 
-    //Detect if z-distance from beginning of throw is greater than ending threshold (virtual wall)
+    //Detect if z-distance is greater than ending threshold (virtual wall)
 	void HandleEnd (Vector3 position)
 	{
 		if (position.z > threshold.ending) {

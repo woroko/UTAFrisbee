@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FrisbeeLocation{
+public class FrisbeeLocation {
     public Quaternion rot;
     public Vector3 pos;
     public float time = 0F;
@@ -17,6 +17,11 @@ public class FrisbeeLocation{
         this.time = 0F;
     }
 
+    public FrisbeeLocation(Vector3 pos, float forwardSpeed)
+    {
+        this.pos = pos;
+        this.forwardSpeed = forwardSpeed;
+    }
     public FrisbeeLocation(Quaternion rot, Vector3 pos)
     {
         this.rot = rot;
