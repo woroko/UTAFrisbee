@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
+//Utility.cs Under MIT License at https://github.com/tejacques/Deque
+
 namespace DequeUtility
 {
     internal class Utility

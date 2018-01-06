@@ -5,34 +5,59 @@ using UnityEngine;
 /*
  * Handles framerate-independant playback/looping with speed adjustments
  * periodically fetches ThrowBuffer from ThrowController, when ThrowController is in the playback state
- * Position is fetched according to timestamp, and the closest throwBuffer index is chosen
- * Slower ´playback speeds may need movement frame interpolation
+ * The closest throwBuffer index is chosen for playback every frame
+ * Slower playback speeds may benefit visually from frame interpolation
+ * We have decided not to implement this, since interpolation hides
+ * possible capture errors from the user.
+ * If the OptiTrack system is working properly, there should be enough data
+ * to make interpolation unnecessary.
  */
 public class ModeHandler : MonoBehaviour {
 
+    //frisbee GameObject
     public GameObject frisbeeModel;
     public Renderer frisbeeMeshRenderer;
+
+    //dot trails
     public TrailHandler trail;
+    public TrailHandler simulationTrail;
+
+    //switch frisbee to recMaterial when recording
     public Material recMaterial;
+    //switch frisbee to playMaterial when playing back
     public Material playMaterial;
+
+    //playback speed coefficient
     public float speed = 1F;
+    //provides public access to current FrisbeeLocation while in Playback, not used
     public FrisbeeLocation current = null;
-	    
+	
+    // Detected throw is saved in the throwBuffer
     List<FrisbeeLocation> throwBuffer;
+
+    // index of the throwBuffer we are currently in
     int animIndex = 0;
+
+    // represents time in the throwBuffer
     float rateTimer = 0F;
+
+    // mode state
     bool initPlayback = false;
     bool transitioningToThrow = true;
 
+    // not used any more
     public float currentRotSpeed = 0F;
     public float currentForwardSpeed = 0F;
 
-	//TESTING VARIABLES
+	// throwController handles all motion detection
 	public ThrowController throwController;
     private float pauseUntil = 0F;
 
-	// init
-	void Start () {
+    // Frisbee physics simulation
+    Prediction pred = new Prediction();
+
+    // init
+    void Start () {
 	}
 
     //Finds closest list index corresponding to (time). Be careful with startFrom!
@@ -45,7 +70,6 @@ public class ModeHandler : MonoBehaviour {
         else {
             for (i = startFrom; i < queue.Count; i++)
             {
-
                 if (time <= queue[i].time)
                 {
                     found = true;
@@ -86,6 +110,7 @@ public class ModeHandler : MonoBehaviour {
         }
 
         // Copy throwbuffer to ModeHandler
+        // Detects when we need to initialize
         if ((throwController.InPlayback() || throwController.WaitingForThrow()) && !initPlayback) {
             throwBuffer = throwController.getThrowBuffer();
             if (throwBuffer != null)
@@ -98,8 +123,12 @@ public class ModeHandler : MonoBehaviour {
                 //trail.Deactivate();
 				//Debug.Log("Detached trail!");
 
-				// Create trail in the beginning of playback loop
+				// Create actual trail of the throw in the beginning of playback loop
 				trail.Create(throwBuffer);
+
+                //Simulate the frisbee and create simulated trail
+                simulateFrisbee();
+                
             }
             //Debug.Log("Init playback!");
             pauseUntil = Time.time + 1.5F; //Slight pause before starting playback
@@ -110,8 +139,9 @@ public class ModeHandler : MonoBehaviour {
             {
                 transitioningToThrow = false;
                 trail.Reset(); // clear trail for new throw
+                simulationTrail.Reset(); // clear simulation trail
 
-				// deprecated
+				// deprecated previous implementation using Unity builtin Trail
                 //trail.Activate();
                 //Debug.Log("Attached trail!");
             }
@@ -127,21 +157,56 @@ public class ModeHandler : MonoBehaviour {
         }
 	}
 
+    // Simulates the frisbee with empirically based model in the z and y-axis, and simple constant velocity on the x-axis
+    void simulateFrisbee()
+    {
+        FrisbeeLocation cutoff = null;
+        int cutoffIndex = 0;
 
+        //Find a cutoff point where the frisbee is likely to still be in mid-flight
+        foreach (FrisbeeLocation loc in throwBuffer)
+        {
+            //cutoff is at 0.7 times the travel distance from throw start to throw end
+            if (loc.pos.z - throwBuffer[0].pos.z > 0.7 * (throwBuffer[throwBuffer.Count - 1].pos.z - throwBuffer[0].pos.z))
+            {
+                cutoff = loc;
+                break;
+            }
+            cutoffIndex++;
+        }
+
+        if (cutoff != null)
+        {
+            //Calculate the velocities and angle to ground plane
+            FrisbeeLocation prevLoc = throwBuffer[cutoffIndex - 4];
+            double vz0 = (cutoff.pos.z - prevLoc.pos.z) / (cutoff.time - prevLoc.time);
+            double vy0 = (cutoff.pos.y - prevLoc.pos.y) / (cutoff.time - prevLoc.time);
+            double vx0 = (cutoff.pos.x - prevLoc.pos.x) / (cutoff.time - prevLoc.time);
+            Vector3 forwardDirection = cutoff.pos - prevLoc.pos;
+            forwardDirection.Normalize();
+            float pitch = Vector3.Angle(forwardDirection, Vector3.ProjectOnPlane(forwardDirection, Vector3.up));
+
+            //integration window is set to 0.001s
+            List<FrisbeeLocation> simulated = pred.simulate3D(cutoff.pos.x, cutoff.pos.y, cutoff.pos.z, vx0, vy0, vz0, pitch, 0.001F);
+            //debug
+            /*Debug.Log("Simulation len: " + simulated.Count);
+            Debug.Log("ThrowBuffer len: " + throwBuffer.Count);
+            Debug.Log("Cutoff and prev y-pos: " + cutoff.pos.y + " " + prevLoc.pos.y);
+            Debug.Log("Cutoff and prevloc timestamps" + cutoff.time + " " + prevLoc.time);
+            Debug.Log("Simulation parameters: " + cutoff.pos.y + " " + vz0 + " " + vy0 + " " + pitch);*/
+            simulationTrail.Create(simulated);
+        }
+    }
+
+    // Called every frame while in playback to update the PlaybackFrisbee position
 	void UpdatePositionFromList () {
 		if (animIndex < throwBuffer.Count-1 && animIndex >= 0) {
 			if (throwBuffer[animIndex] != null) {
 				FrisbeeLocation location = throwBuffer[animIndex];
-                if (animIndex % 2 == 0)
-                {
-                    Debug.Log("Frisbee Rot Speed: " + location.rotSpeed);
-                    //Debug.Log("Frisbee Forward Speed: " + location.forwardSpeed);
-                }
+
                 frisbeeModel.transform.localRotation = location.rot;
 				frisbeeModel.transform.localPosition = location.pos;
                 current = location;
-                //currentForwardSpeed = location.forwardSpeed;
-                //currentRotSpeed = location.rotSpeed;
 			}
             rateTimer += Time.deltaTime * speed;
             animIndex = getListIndexFromTime(throwBuffer, rateTimer, animIndex);

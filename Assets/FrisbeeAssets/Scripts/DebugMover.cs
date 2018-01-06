@@ -11,20 +11,18 @@ public class DebugMover : MonoBehaviour {
     public TextAsset recording;
     public float speed = 1F;
 
+    // We start from row 7, since there is some junk in the csv
     const int FIRSTROW = 7;
 
-    List<FrisbeeLocation> locationList = new List<FrisbeeLocation>(); //float[4] kvaternioni
+    List<FrisbeeLocation> locationList = new List<FrisbeeLocation>();
     int animIndex = 0;
     Vector3 posScale = new Vector3(1.0F, 1.0F, 1.0F);
     float rateTimer = 0F;
     float beginTime = 0F;
 
     bool moving = false;
-    //bool beginning = true;
 
-
-
-    // Use this for initialization
+    // Csv parsed to locationList at script init
     void Start () {
         ParseCSVFile();
     }
@@ -42,13 +40,15 @@ public class DebugMover : MonoBehaviour {
         else if (Time.time < beginTime + 2.5F) {
             FrisbeeLocation location = locationList[0];
             frisbeeModel.transform.localRotation = location.rot;
-            frisbeeModel.transform.localPosition = Vector3.Scale(location.pos - new Vector3(0F, 1F, 0F), posScale);
+            frisbeeModel.transform.localPosition = Vector3.Scale(location.pos - new Vector3(0F, 0F, 0F), posScale);
         }
+        //Update the position from locationList
         else if (moving)
             UpdatePosition();
 
     }
 
+    // Updates the RecordingFrisbee location from csv file. Scaling and offset left for manual adjustment
     void UpdatePosition()
     {
         if (animIndex < locationList.Count)
@@ -57,9 +57,9 @@ public class DebugMover : MonoBehaviour {
             {
                 FrisbeeLocation location = locationList[animIndex];
                 frisbeeModel.transform.localRotation = location.rot;
-                frisbeeModel.transform.localPosition = Vector3.Scale(location.pos - new Vector3(0F, 1F, 0F), posScale);
+                frisbeeModel.transform.localPosition = Vector3.Scale(location.pos - new Vector3(0F, 0F, 0F), posScale);
             }
-            animIndex = (int)(rateTimer / 0.01F);
+            animIndex = (int)(rateTimer / (1/100F)); //presumes 100fps
             rateTimer += Time.deltaTime * speed;
         }
         else
