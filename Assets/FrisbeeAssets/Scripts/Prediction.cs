@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
+/* Predicts the trajectory of the Frisbee using a physically based model on the y and z-axes
+ * and using a simple constant velocity on the x-axis
+ */
 public class Prediction {
 
     //Coefficients and formulas sourced from V. R. Morrison, The Physics of Frisbees
@@ -29,7 +33,7 @@ public class Prediction {
         List<FrisbeeLocation> ret = new List<FrisbeeLocation>();
         //Calculating the lift coefficient
         //Formulas provided in V. R. Morrison, The Physics of Frisbees
-        //Orig. by S. A. Hummel
+        //Orig. model attributed to S. A. Hummel
         double cl = CL0 + CLA * alpha * Mathf.PI / 180;
         //Drag coefficient
         double cd = CD0 + CDA * Mathf.Pow((float)(alpha - ALPHA0) * Mathf.PI / 180, 2);
@@ -60,9 +64,12 @@ public class Prediction {
             double deltavz = -RHO * Mathf.Pow((float)vz, 2) * AREA * cd * deltaT;
 
             // Faking the side-to-side movement due to gyroscopic precession or other unknown effects
-            // Inspired by https://discgolf.ultiworld.com/2017/05/02/tuesday-tips-disc-stability-release-angles-work-together/
+            // More information at https://discgolf.ultiworld.com/2017/05/02/tuesday-tips-disc-stability-release-angles-work-together/
+            // The roll (z) angle of the frisbee is so unstable, that it did not seem possible to accurately simulate the x-axis movement
+            // It is possible to add some acceleration here, if desired
             double deltavx = 0;
 
+            // simple velocity and position updates
             vz = vz + deltavz;
             vy = vy + deltavy;
             vx = vx + deltavx;
@@ -73,7 +80,7 @@ public class Prediction {
 
             if (i % 10 == 0)
             {
-                //Vector3(x,y,z) x in original 2D simulation
+                //Store the simulation result once in every 10 iterations
                 ret.Add(new FrisbeeLocation(new Vector3((float)x, (float)y, (float)z), (float)vz));
             }
             i++;

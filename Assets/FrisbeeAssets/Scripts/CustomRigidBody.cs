@@ -29,7 +29,7 @@ public class CustomRigidBody : MonoBehaviour
         }
     }
 
-
+    //update the transform position and rotation every frame
     void Update()
     {
         rbState = StreamingClient.GetLatestRigidBodyState(RigidBodyId);
@@ -48,7 +48,7 @@ public class CustomRigidBody : MonoBehaviour
         else
             return null;
     }
-    //TODO: UI Team: Implement isSeen indicator according to #8
+    //Checks if OptiTrack data is stale
     public bool isSeen()
     {
         if (rbState == null || OptitrackHiResTimer.Now().SecondsSince(rbState.DeliveryTimestamp) > 0.1)

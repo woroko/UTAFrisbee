@@ -4,6 +4,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
+//Under MIT License at https://github.com/tejacques/Deque
+
 namespace System.Collections.Generic
 {
     /// <summary>

@@ -14,29 +14,46 @@ using UnityEngine;
  */
 public class ModeHandler : MonoBehaviour {
 
+    //frisbee GameObject
     public GameObject frisbeeModel;
     public Renderer frisbeeMeshRenderer;
+
+    //dot trails
     public TrailHandler trail;
     public TrailHandler simulationTrail;
 
+    //switch frisbee to recMaterial when recording
     public Material recMaterial;
+    //switch frisbee to playMaterial when playing back
     public Material playMaterial;
+
+    //playback speed coefficient
     public float speed = 1F;
+    //provides public access to current FrisbeeLocation while in Playback, not used
     public FrisbeeLocation current = null;
-	    
+	
+    // Detected throw is saved in the throwBuffer
     List<FrisbeeLocation> throwBuffer;
+
+    // index of the throwBuffer we are currently in
     int animIndex = 0;
+
+    // represents time in the throwBuffer
     float rateTimer = 0F;
+
+    // mode state
     bool initPlayback = false;
     bool transitioningToThrow = true;
 
+    // not used any more
     public float currentRotSpeed = 0F;
     public float currentForwardSpeed = 0F;
 
-	//TESTING VARIABLES
+	// throwController handles all motion detection
 	public ThrowController throwController;
     private float pauseUntil = 0F;
 
+    // Frisbee physics simulation
     Prediction pred = new Prediction();
 
     // init

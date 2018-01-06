@@ -2,6 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/* Stores all the data that is saved for one capture frame
+ * Contains Frisbee position, rotation, timestamp,
+ * forward speed (in m/s), rotation speed (in rpm)
+ * wasSeen is true when the frisbee was seen by cameras during the frame
+ * if wasSeen is false, the FrisbeeLocation is probably stale
+ */
+
 public class FrisbeeLocation {
     public Quaternion rot;
     public Vector3 pos;

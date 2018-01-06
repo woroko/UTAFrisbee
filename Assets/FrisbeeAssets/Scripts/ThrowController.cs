@@ -7,22 +7,21 @@ using UnityEngine.UI;
 [System.Serializable]
 public class Threshold {
 	public float throwing, holding, ending, glitch, throwStartZ;
-    //recommend 0.2, 0.05, 1.2, 5
+    //recommended values are 0.3, 0.2, 1.2, 10, -0.5
 }
 
 
 public class ThrowController : MonoBehaviour {
 
     //Suggested values: backtracking=1.5s, throwDetection=0.5s
-    //NOTE: Update runs at variable Unity framerate, need timestamps
+    //Everything runs at Unity variable framerate
 
     public float throwBacktrackingTime = 1.5F;
     public float throwDetectionTime = 0.5F;
 
+    //Threshold holds the parameters for the backtracking and detection algorithm
 	public Threshold threshold;
-
 	public Transform trackingTarget;
-
     public CustomRigidBody customRB;
 
 	//UI
@@ -37,6 +36,7 @@ public class ThrowController : MonoBehaviour {
 
 	// position that throw started
     Vector3 throwStartPos;
+    // start times
     float throwStartTime;
     float scriptStartTime;
 
@@ -101,7 +101,7 @@ public class ThrowController : MonoBehaviour {
 		HandleModeChanges(currentPosition);
         if(Throwing())
         {
-            // Throw has begun, add FrisbeeLocations to captureBuffer
+            // Throw has begun, calculate and add FrisbeeLocations to captureBuffer
             FrisbeeLocation temp = captureBuffer.Get(captureBuffer.Count - 1);
             FrisbeeLocation prev = captureBuffer.Get(captureBuffer.Count - 1 - 2);
             float currentThrowTime = temp.time - throwStartTime;
@@ -173,6 +173,7 @@ public class ThrowController : MonoBehaviour {
         if (WaitingForThrow() && difference > threshold.throwing && difference < threshold.glitch && position.z < 1F) {
 			HandleThrow();
 		}
+        //Wait until player is inside the throw zone and holding the frisbee still
 		else if (InPlayback () && Time.time > nextThrow && position.z < threshold.throwStartZ && difference < threshold.holding) {
             throwMode = 1;
             Debug.Log("Waiting for throw...");
@@ -196,7 +197,7 @@ public class ThrowController : MonoBehaviour {
 	}
 
     // Handles the backtracking and saves the part of the throw that happened
-    // before
+    // before the detection occurred
 	void HandleThrow ()
 	{
         throwStartTime = Time.time - throwBacktrackingTime;
