@@ -5,15 +5,19 @@
 using System;
 using UnityEngine;
 
-
 public class CustomRigidBody : MonoBehaviour
 {
     public OptitrackStreamingClient StreamingClient;
     public Int32 RigidBodyId;
     private OptitrackRigidBodyState rbState = null;
+    private OptitrackHiResTimer.Timestamp rbTimestamp;
+    public OptitrackHiResTimer.Timestamp zeroTime;
 
     void Start()
     {
+        //sets the reference time
+        zeroTime.m_ticks = 0;
+
         // null client, find default
         if (this.StreamingClient == null)
         {
@@ -29,7 +33,7 @@ public class CustomRigidBody : MonoBehaviour
         }
     }
 
-    //update the transform position and rotation every frame
+    //update the transform position, rotation and timestamp every frame
     void Update()
     {
         rbState = StreamingClient.GetLatestRigidBodyState(RigidBodyId);
@@ -37,7 +41,15 @@ public class CustomRigidBody : MonoBehaviour
         {
             this.transform.localPosition = rbState.Pose.Position;
             this.transform.localRotation = rbState.Pose.Orientation;
+            this.rbTimestamp = rbState.DeliveryTimestamp;
         }
+    }
+
+    //direct access to Timestamp
+
+    public float time()
+    {
+        return this.rbTimestamp.SecondsSince(zeroTime);
     }
 
     //direct access to OptiTrack data

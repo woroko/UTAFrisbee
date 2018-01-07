@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 /*
  * Handles framerate-independant playback/looping with speed adjustments
- * periodically fetches ThrowBuffer from ThrowController, when ThrowController is in the playback state
+ * fetches ThrowBuffer from ThrowController, when ThrowController is in the playback state
  * The closest throwBuffer index is chosen for playback every frame
  * Slower playback speeds may benefit visually from frame interpolation
  * We have decided not to implement this, since interpolation hides
@@ -30,8 +30,9 @@ public class ModeHandler : MonoBehaviour {
 
     //playback speed coefficient
     public float speed = 1F;
+
     //provides public access to current FrisbeeLocation while in Playback, not used
-    public FrisbeeLocation current = null;
+    //public FrisbeeLocation current = null;
 	
     // Detected throw is saved in the throwBuffer
     List<FrisbeeLocation> throwBuffer;
@@ -51,11 +52,16 @@ public class ModeHandler : MonoBehaviour {
     public float currentForwardSpeed = 0F;
 
    
-
+    //green percentage variables
     public Text greenPercentageText;
-
     float greenLineHeight = 1.2F;
     float greenLineWidth = 0.2F;
+    public bool useCircleGreenArea = true;
+
+    //Displays the last speed before physics simulation begins
+    public Text endingSpeedText;
+
+    public float simulationBegin = 0.7F;
 
     // throwController handles all motion detection
     public ThrowController throwController;
@@ -68,6 +74,7 @@ public class ModeHandler : MonoBehaviour {
     void Start () {
         greenLineHeight = GameObject.Find("Line").transform.position.y;
         greenLineWidth = GameObject.Find("Line").GetComponent<LineRenderer>().startWidth;
+        simulationTrail.showRotSpeed(false);
     }
 
     //Calculates the percentage of points inside the green zone
@@ -78,16 +85,20 @@ public class ModeHandler : MonoBehaviour {
         {
             Vector3 pos = throwBuffer[i].pos;
             float time = throwBuffer[i].time - throwBuffer[i - 1].time;
-            Debug.Log("green pos: " + pos);
-            if (-greenLineWidth/2 < pos.x && pos.x < greenLineWidth/2 && ((-greenLineWidth/2)+greenLineHeight) < pos.y 
+            //green zone is greenLineWidth x greenLineWidth
+            if (useCircleGreenArea && Vector2.Distance(new Vector2(0,greenLineHeight), new Vector2(pos.x, pos.y)) <= greenLineWidth/2)
+            {
+                insideTime += time;
+            }
+            else if (-greenLineWidth/2 < pos.x && pos.x < greenLineWidth/2 && ((-greenLineWidth/2)+greenLineHeight) < pos.y 
                 && pos.y < (greenLineWidth/2 + greenLineHeight))
             {
                 insideTime += time;
-                Debug.Log("inside");
             }
         }
-        Debug.Log("insideTime: " + insideTime);
-        Debug.Log("glWidth: " + greenLineWidth + " glHeight: " + greenLineHeight);
+        //debug
+        //Debug.Log("insideTime: " + insideTime);
+        //Debug.Log("glWidth: " + greenLineWidth + " glHeight: " + greenLineHeight);
         greenPercentageText.text = "Percentage inside green zone: " + (100*(insideTime/throwBuffer[throwBuffer.Count-1].time)).ToString("F1") + "%";
     }
 
@@ -101,6 +112,7 @@ public class ModeHandler : MonoBehaviour {
             updateGreenPercentage();
         }
     }
+
     //Finds closest list index corresponding to (time). Be careful with startFrom!
     public int getListIndexFromTime(List<FrisbeeLocation> queue, float time, int startFrom=0)
     {
@@ -138,6 +150,8 @@ public class ModeHandler : MonoBehaviour {
 
     // called every frame
     void Update () {
+
+        //playback speed control
         if (Input.GetKeyDown("g"))
         {
             if (speed >= 1.0F)
@@ -150,7 +164,7 @@ public class ModeHandler : MonoBehaviour {
             }
         }
 
-        // Copy throwbuffer to ModeHandler
+        // Copy throwbuffer from ThrowController
         // Detects when we need to initialize
         if ((throwController.InPlayback() || throwController.WaitingForThrow()) && !initPlayback) {
             throwBuffer = throwController.getThrowBuffer();
@@ -209,8 +223,8 @@ public class ModeHandler : MonoBehaviour {
         //Find a cutoff point where the frisbee is likely to still be in mid-flight
         foreach (FrisbeeLocation loc in throwBuffer)
         {
-            //cutoff is at 0.7 times the travel distance from throw start to throw end
-            if (loc.pos.z - throwBuffer[0].pos.z > 0.7 * (throwBuffer[throwBuffer.Count - 1].pos.z - throwBuffer[0].pos.z))
+            //cutoff default simulationBegin is 0.7 times the travel distance from throw start to throw end
+            if (loc.pos.z - throwBuffer[0].pos.z > simulationBegin * (throwBuffer[throwBuffer.Count - 1].pos.z - throwBuffer[0].pos.z))
             {
                 cutoff = loc;
                 break;
@@ -229,7 +243,7 @@ public class ModeHandler : MonoBehaviour {
             forwardDirection.Normalize();
             float pitch = Vector3.Angle(forwardDirection, Vector3.ProjectOnPlane(forwardDirection, Vector3.up));
 
-            //integration window is set to 0.001s
+            //window of numerical integration is set to 0.001s
             List<FrisbeeLocation> simulated = pred.simulate3D(cutoff.pos.x, cutoff.pos.y, cutoff.pos.z, vx0, vy0, vz0, pitch, 0.001F);
             //debug
             /*Debug.Log("Simulation len: " + simulated.Count);
@@ -238,6 +252,7 @@ public class ModeHandler : MonoBehaviour {
             Debug.Log("Cutoff and prevloc timestamps" + cutoff.time + " " + prevLoc.time);
             Debug.Log("Simulation parameters: " + cutoff.pos.y + " " + vz0 + " " + vy0 + " " + pitch);*/
             simulationTrail.Create(simulated);
+            endingSpeedText.text = "Ending speed before simulation: " + cutoff.forwardSpeed.ToString("F1") + " m/s";
         }
     }
 
@@ -249,7 +264,7 @@ public class ModeHandler : MonoBehaviour {
 
                 frisbeeModel.transform.localRotation = location.rot;
 				frisbeeModel.transform.localPosition = location.pos;
-                current = location;
+                //current = location;
 			}
             rateTimer += Time.deltaTime * speed;
             animIndex = getListIndexFromTime(throwBuffer, rateTimer, animIndex);

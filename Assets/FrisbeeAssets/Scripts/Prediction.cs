@@ -81,7 +81,8 @@ public class Prediction {
             if (i % 10 == 0)
             {
                 //Store the simulation result once in every 10 iterations
-                ret.Add(new FrisbeeLocation(new Vector3((float)x, (float)y, (float)z), (float)vz));
+                ret.Add(new FrisbeeLocation(new Vector3((float)x, (float)y, (float)z), Mathf.Sqrt(Mathf.Pow((float)vx,2)
+                    + Mathf.Pow((float)vy, 2) + Mathf.Pow((float)vz, 2)) ));
             }
             i++;
         }

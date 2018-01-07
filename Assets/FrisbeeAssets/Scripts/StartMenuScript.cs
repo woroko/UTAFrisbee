@@ -194,7 +194,7 @@ public class StartMenuScript : MonoBehaviour {
 
 	void OnRateSliderChange(float value) {
 
-        //value = (float)Math.Round((double)value, 1);
+        value = (float)Math.Round((double)value, 1);
         // Change the throw rate based on the slider value
         GameObject.Find ("RecordingFrisbee").GetComponent<ThrowController> ().throwRate = value;
 
@@ -207,9 +207,10 @@ public class StartMenuScript : MonoBehaviour {
         value = (float)Math.Round((double)value, 1);
         // Change the percentage of trail dots drawn based on the slider value
         GameObject.Find ("Trail").GetComponent<TrailHandler> ().trailFrequency = value;
+        GameObject.Find("SimulationTrail").GetComponent<TrailHandler>().trailFrequency = value;
 
-		// Update the value text next to the slider
-		trailSlider.GetComponentsInChildren<Text> ()[1].text = value.ToString("F1") + " %";
+        // Update the value text next to the slider
+        trailSlider.GetComponentsInChildren<Text> ()[1].text = value.ToString("F0") + " %";
 	}
 
     // Change the line width

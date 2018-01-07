@@ -72,11 +72,11 @@ public class UIScript : MonoBehaviour {
             GameObject tempCam = topCamera;
             if (Input.GetKey("q"))
             {
-                tempCam.transform.Translate(new Vector3(0, -moveSpeed * Time.deltaTime, 0), Space.World);
+                tempCam.transform.Translate(new Vector3(0, moveSpeed * Time.deltaTime, 0), Space.World);
             }
             if (Input.GetKey("e"))
             {
-                tempCam.transform.Translate(new Vector3(0, moveSpeed * Time.deltaTime, 0), Space.World);
+                tempCam.transform.Translate(new Vector3(0, -moveSpeed * Time.deltaTime, 0), Space.World);
             }
             if (Input.GetKey("w"))
             {
@@ -137,7 +137,7 @@ public class UIScript : MonoBehaviour {
             if (firstThrow == true) 
                 recordingIndicator.text = "Get frisbee to starting position";
             else
-                recordingIndicator.text = "Get frisbee back to starting position (playing your last throw)";
+                recordingIndicator.text = "Get frisbee back to starting position (playing last throw)";
         }
 
         // Ready to throw
@@ -147,14 +147,14 @@ public class UIScript : MonoBehaviour {
                 if (firstThrow == true)
                     recordingIndicator.text = "Ready for a new throw";
                 else
-                    recordingIndicator.text = "Ready for a new throw (Playing your last throw)";
+                    recordingIndicator.text = "Ready for a new throw (playing last throw)";
             }
             else {
                 recordingIndicator.color = Color.white;
                 if (firstThrow == true)
                     recordingIndicator.text = "Don't throw yet";
                 else
-                    recordingIndicator.text = "Don't throw yet (Playing your last throw)";
+                    recordingIndicator.text = "Don't throw yet (playing last throw)";
             }
         }
 
