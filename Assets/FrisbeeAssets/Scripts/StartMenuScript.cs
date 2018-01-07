@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System;
 
 public class StartMenuScript : MonoBehaviour {
 
@@ -35,9 +36,11 @@ public class StartMenuScript : MonoBehaviour {
 	public Slider detectionSlider;
 	public Slider rateSlider;
 	public Slider trailSlider;
+    public Slider lineWidthSlider;
+    public Slider lineHeightSlider;
 
-	// Setting Toggles 
-	public Toggle terrainToggle;
+    // Setting Toggles 
+    public Toggle terrainToggle;
 	public Toggle lineToggle;
 
 	// Buttons to reset settings to default or save them
@@ -47,6 +50,9 @@ public class StartMenuScript : MonoBehaviour {
 	// Materials to use in the terrain toggle setting
 	public Material grassyTerrain;
 	public Material simpleTerrain;
+
+    float tempLineWidth = 0.2F;
+    float tempLineHeight = 1.2F;
 
 	// Use this for initialization
 	void Start () {
@@ -66,12 +72,15 @@ public class StartMenuScript : MonoBehaviour {
 		detectionSlider.GetComponent<Slider> ().onValueChanged.AddListener(OnDetectionSliderChange);
 		rateSlider.GetComponent<Slider> ().onValueChanged.AddListener(OnRateSliderChange);
 		trailSlider.GetComponent<Slider> ().onValueChanged.AddListener(OnTrailSliderChange);
+        lineWidthSlider.GetComponent<Slider>().onValueChanged.AddListener(OnLineWidthSliderChange);
+        lineHeightSlider.GetComponent<Slider>().onValueChanged.AddListener(OnLineHeightSliderChange);
 
-		terrainToggle.GetComponent<Toggle> ().onValueChanged.AddListener (OnTerrainToggleChange);
+        terrainToggle.GetComponent<Toggle> ().onValueChanged.AddListener (OnTerrainToggleChange);
 		lineToggle.GetComponent<Toggle> ().onValueChanged.AddListener (OnLineToggleChange);
 
 		defaultButton.GetComponent<Button> ().onClick.AddListener(OnDefaultButtonClick);
 		saveButton.GetComponent<Button> ().onClick.AddListener(OnSaveButtonClick);
+
 	}
 
 	// Update is called once per frame
@@ -165,7 +174,8 @@ public class StartMenuScript : MonoBehaviour {
 
 	void OnBacktrackSliderChange(float value) {
 
-		// Change the backtracking time based on the slider value
+        // Change the backtracking time based on the slider value
+        value = (float)Math.Round((double)value, 1);
 		GameObject.Find ("RecordingFrisbee").GetComponent<ThrowController> ().throwBacktrackingTime = value;
 
 		// Update the value text next to the slider. The F1 parameter is used to trim the decimals to 1.
@@ -174,8 +184,9 @@ public class StartMenuScript : MonoBehaviour {
 
 	void OnDetectionSliderChange(float value) {
 
-		// Change the detection time based on the slider value
-		GameObject.Find ("RecordingFrisbee").GetComponent<ThrowController> ().throwDetectionTime = value;
+        value = (float)Math.Round((double)value, 1);
+        // Change the detection time based on the slider value
+        GameObject.Find ("RecordingFrisbee").GetComponent<ThrowController> ().throwDetectionTime = value;
 
 		// Update the value text next to the slider
 		detectionSlider.GetComponentsInChildren<Text> ()[1].text = value.ToString("F1") + " s";
@@ -183,23 +194,45 @@ public class StartMenuScript : MonoBehaviour {
 
 	void OnRateSliderChange(float value) {
 
-		// Change the throw rate based on the slider value
-		GameObject.Find ("RecordingFrisbee").GetComponent<ThrowController> ().throwRate = value;
+        //value = (float)Math.Round((double)value, 1);
+        // Change the throw rate based on the slider value
+        GameObject.Find ("RecordingFrisbee").GetComponent<ThrowController> ().throwRate = value;
 
 		// Update the value text next to the slider
-		rateSlider.GetComponentsInChildren<Text> ()[1].text = value.ToString() + " s";
+		rateSlider.GetComponentsInChildren<Text> ()[1].text = value.ToString("F1") + " s";
 	}
 
 	void OnTrailSliderChange(float value) {
 
-		// Change the percentage of trail dots drawn based on the slider value
-		GameObject.Find ("Trail").GetComponent<TrailHandler> ().trailFrequency = value;
+        value = (float)Math.Round((double)value, 1);
+        // Change the percentage of trail dots drawn based on the slider value
+        GameObject.Find ("Trail").GetComponent<TrailHandler> ().trailFrequency = value;
 
 		// Update the value text next to the slider
-		trailSlider.GetComponentsInChildren<Text> ()[1].text = value.ToString() + " %";
+		trailSlider.GetComponentsInChildren<Text> ()[1].text = value.ToString("F1") + " %";
 	}
 
-	void OnTerrainToggleChange(bool value) {
+    // Change the line width
+    void OnLineWidthSliderChange(float value)
+    {
+        value = (float)Math.Round((double)value, 2);
+        tempLineWidth = value;
+        GameObject.Find("Line").GetComponent<LineRenderer>().SetWidth(value, value);
+        lineWidthSlider.GetComponentsInChildren<Text>()[1].text = value.ToString("F2") + " m";
+    }
+
+    // Change the line y-position
+    void OnLineHeightSliderChange(float value)
+    {
+        value = (float)Math.Round((double)value, 2);
+        tempLineHeight = value;
+        Vector3 pos = GameObject.Find("Line").transform.position;
+        pos = new Vector3(pos.x, value, pos.z);
+        GameObject.Find("Line").transform.position = pos;
+        lineHeightSlider.GetComponentsInChildren<Text>()[1].text = value.ToString("F2") + " m";
+    }
+
+    void OnTerrainToggleChange(bool value) {
 
 		// Get the terrain game object
 		GameObject terrain = GameObject.Find ("Plane");
@@ -262,6 +295,11 @@ public class StartMenuScript : MonoBehaviour {
 
 		OnLineToggleChange (true);
 		lineToggle.isOn = true;
+
+        OnLineWidthSliderChange(0.2F);
+        lineWidthSlider.value = 0.2F;
+        OnLineHeightSliderChange(1.2F);
+        lineHeightSlider.value = 1.2F;
 	}
 
 	// Note: the settings are saved when using the sliders, not when pressing the save button.
@@ -276,5 +314,7 @@ public class StartMenuScript : MonoBehaviour {
 
 		// Show the main menu buttons
 		mainButtons.SetActive(true);
-	}
+
+        GameObject.Find("PlaybackFrisbee").GetComponent<ModeHandler>().setGreenLine(tempLineWidth, tempLineHeight);
+    }
 }

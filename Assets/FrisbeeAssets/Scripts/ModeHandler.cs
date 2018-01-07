@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 /*
  * Handles framerate-independant playback/looping with speed adjustments
@@ -49,8 +50,15 @@ public class ModeHandler : MonoBehaviour {
     public float currentRotSpeed = 0F;
     public float currentForwardSpeed = 0F;
 
-	// throwController handles all motion detection
-	public ThrowController throwController;
+   
+
+    public Text greenPercentageText;
+
+    float greenLineHeight = 1.2F;
+    float greenLineWidth = 0.2F;
+
+    // throwController handles all motion detection
+    public ThrowController throwController;
     private float pauseUntil = 0F;
 
     // Frisbee physics simulation
@@ -58,8 +66,41 @@ public class ModeHandler : MonoBehaviour {
 
     // init
     void Start () {
-	}
+        greenLineHeight = GameObject.Find("Line").transform.position.y;
+        greenLineWidth = GameObject.Find("Line").GetComponent<LineRenderer>().startWidth;
+    }
 
+    //Calculates the percentage of points inside the green zone
+    public void updateGreenPercentage()
+    {
+        float insideTime = 0;
+        for (int i=1; i<throwBuffer.Count; i++)
+        {
+            Vector3 pos = throwBuffer[i].pos;
+            float time = throwBuffer[i].time - throwBuffer[i - 1].time;
+            Debug.Log("green pos: " + pos);
+            if (-greenLineWidth/2 < pos.x && pos.x < greenLineWidth/2 && ((-greenLineWidth/2)+greenLineHeight) < pos.y 
+                && pos.y < (greenLineWidth/2 + greenLineHeight))
+            {
+                insideTime += time;
+                Debug.Log("inside");
+            }
+        }
+        Debug.Log("insideTime: " + insideTime);
+        Debug.Log("glWidth: " + greenLineWidth + " glHeight: " + greenLineHeight);
+        greenPercentageText.text = "Percentage inside green zone: " + (100*(insideTime/throwBuffer[throwBuffer.Count-1].time)).ToString("F1") + "%";
+    }
+
+    //Set green zone size
+    public void setGreenLine(float value, float height)
+    {
+        greenLineWidth = value;
+        greenLineHeight = height;
+        if (initPlayback)
+        {
+            updateGreenPercentage();
+        }
+    }
     //Finds closest list index corresponding to (time). Be careful with startFrom!
     public int getListIndexFromTime(List<FrisbeeLocation> queue, float time, int startFrom=0)
     {
@@ -97,7 +138,7 @@ public class ModeHandler : MonoBehaviour {
 
     // called every frame
     void Update () {
-        if (Input.GetKeyDown("s"))
+        if (Input.GetKeyDown("g"))
         {
             if (speed >= 1.0F)
             {
@@ -128,6 +169,8 @@ public class ModeHandler : MonoBehaviour {
 
                 //Simulate the frisbee and create simulated trail
                 simulateFrisbee();
+
+                updateGreenPercentage();
                 
             }
             //Debug.Log("Init playback!");
