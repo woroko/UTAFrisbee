@@ -16,7 +16,11 @@ public class UIScript : MonoBehaviour {
 	public Text frisbeeRotation;
     public Text isSeenText;
 
+    public GameObject mainCamera, topCamera, sideCamera;
+
     private bool firstThrow;
+
+    public float moveSpeed = 2.5F;
 
     // Use this for initialization
     void Start () {
@@ -33,6 +37,92 @@ public class UIScript : MonoBehaviour {
         /*if (Input.GetKey ("space")) {
 			frisbee.GetComponent<TrailRenderer> ().Clear();
 		}*/
+        
+        //Camera keyboard controls
+        if (mainCamera.activeSelf)
+        {
+            GameObject tempCam = mainCamera;
+            if (Input.GetKey("q"))
+            {
+                tempCam.transform.Translate(tempCam.transform.forward * -1F * moveSpeed*Time.deltaTime);
+            }
+            if (Input.GetKey("e"))
+            {
+                tempCam.transform.Translate(tempCam.transform.forward * moveSpeed*Time.deltaTime);
+            }
+            if (Input.GetKey("w"))
+            {
+                tempCam.transform.Translate(new Vector3(0, 0, moveSpeed * Time.deltaTime), Space.World);
+            }
+            if (Input.GetKey("s"))
+            {
+                tempCam.transform.Translate(new Vector3(0, 0, -moveSpeed * Time.deltaTime), Space.World);
+            }
+            if (Input.GetKey("a"))
+            {
+                tempCam.transform.Translate(new Vector3(-moveSpeed * Time.deltaTime, 0, 0), Space.World);
+            }
+            if (Input.GetKey("d"))
+            {
+                tempCam.transform.Translate(new Vector3(moveSpeed * Time.deltaTime, 0, 0), Space.World);
+            }
+        }
+        else if (topCamera.activeSelf)
+        {
+            GameObject tempCam = topCamera;
+            if (Input.GetKey("q"))
+            {
+                tempCam.transform.Translate(new Vector3(0, moveSpeed * Time.deltaTime, 0), Space.World);
+            }
+            if (Input.GetKey("e"))
+            {
+                tempCam.transform.Translate(new Vector3(0, -moveSpeed * Time.deltaTime, 0), Space.World);
+            }
+            if (Input.GetKey("w"))
+            {
+                tempCam.transform.Translate(new Vector3(0, 0, moveSpeed * Time.deltaTime), Space.World);
+            }
+            if (Input.GetKey("s"))
+            {
+                tempCam.transform.Translate(new Vector3(0, 0, -moveSpeed * Time.deltaTime), Space.World);
+            }
+            if (Input.GetKey("a"))
+            {
+                tempCam.transform.Translate(new Vector3(-moveSpeed * Time.deltaTime, 0, 0), Space.World);
+            }
+            if (Input.GetKey("d"))
+            {
+                tempCam.transform.Translate(new Vector3(moveSpeed * Time.deltaTime, 0, 0), Space.World);
+            }
+        }
+        else if (sideCamera.activeSelf)
+        {
+            GameObject tempCam = sideCamera;
+            if (Input.GetKey("q"))
+            {
+                tempCam.transform.Translate(new Vector3(moveSpeed * Time.deltaTime, 0, 0), Space.World);
+            }
+            if (Input.GetKey("e"))
+            {
+                tempCam.transform.Translate(new Vector3(-moveSpeed * Time.deltaTime, 0, 0), Space.World);
+            }
+            if (Input.GetKey("w"))
+            {
+                tempCam.transform.Translate(new Vector3(0, moveSpeed * Time.deltaTime, 0), Space.World);
+            }
+            if (Input.GetKey("s"))
+            {
+                tempCam.transform.Translate(new Vector3(0, -moveSpeed * Time.deltaTime, 0), Space.World);
+            }
+            if (Input.GetKey("a"))
+            {
+                tempCam.transform.Translate(new Vector3(0, 0, -moveSpeed * Time.deltaTime), Space.World);
+            }
+            if (Input.GetKey("d"))
+            {
+                tempCam.transform.Translate(new Vector3(0, 0, moveSpeed * Time.deltaTime), Space.World);
+            }
+        }
 
         if (frisbeeScript.isSeen())
             isSeenText.text = "";
@@ -47,7 +137,7 @@ public class UIScript : MonoBehaviour {
             if (firstThrow == true) 
                 recordingIndicator.text = "Get frisbee to starting position";
             else
-                recordingIndicator.text = "Get frisbee back to starting position (playing your last throw)";
+                recordingIndicator.text = "Get frisbee back to starting position (playing last throw)";
         }
 
         // Ready to throw
@@ -57,14 +147,14 @@ public class UIScript : MonoBehaviour {
                 if (firstThrow == true)
                     recordingIndicator.text = "Ready for a new throw";
                 else
-                    recordingIndicator.text = "Ready for a new throw (Playing your last throw)";
+                    recordingIndicator.text = "Ready for a new throw (playing last throw)";
             }
             else {
                 recordingIndicator.color = Color.white;
                 if (firstThrow == true)
                     recordingIndicator.text = "Don't throw yet";
                 else
-                    recordingIndicator.text = "Don't throw yet (Playing your last throw)";
+                    recordingIndicator.text = "Don't throw yet (playing last throw)";
             }
         }
 

@@ -15,6 +15,14 @@ public class TrailHandler : MonoBehaviour {
 
     public Color trailColor = Color.red;
 
+    bool rotSpeedSetting = true;
+
+    //change whether tooltip shows rotation speed
+    public void showRotSpeed(bool show)
+    {
+        rotSpeedSetting = show;
+    }
+
     void Start() {
 
 		// Initialize the list
@@ -47,9 +55,10 @@ public class TrailHandler : MonoBehaviour {
             trailPiece.GetComponent<TrailPieceScript>().trailColor = trailColor;
             trailPiece.GetComponent<TrailPieceScript>().rotSpeed = buffer[i].rotSpeed;
 			trailPiece.GetComponent<TrailPieceScript>().forwardSpeed = buffer[i].forwardSpeed;
+            trailPiece.GetComponent<TrailPieceScript>().showRotSpeed(rotSpeedSetting);
 
-			// Add the trail piece to the list
-			trailPieces.Add(trailPiece);
+            // Add the trail piece to the list
+            trailPieces.Add(trailPiece);
 		}
 	}
 

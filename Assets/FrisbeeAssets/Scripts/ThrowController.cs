@@ -19,10 +19,17 @@ public class ThrowController : MonoBehaviour {
     public float throwBacktrackingTime = 1.5F;
     public float throwDetectionTime = 0.5F;
 
+    //whether we use OptitrackHiResTimer or unity Time.time. Both are converted to float, so they lose accuracy after several hours
+    public bool useOptitrackTimestamp = false;
+
+    //how many frames of context we use to calculate speed
+    public int speedCalculationFrames = 2;
+
     //Threshold holds the parameters for the backtracking and detection algorithm
 	public Threshold threshold;
 	public Transform trackingTarget;
     public CustomRigidBody customRB;
+
 
 	//UI
 	public Text modeText;
@@ -85,12 +92,17 @@ public class ThrowController : MonoBehaviour {
 
         //add current FrisbeeLocation to back of queue
         //buffer has not yet reached full capacity
+        bool isSeen = customRB.isSeen();
+        float currTime = Time.time;
+        if (isSeen && useOptitrackTimestamp)
+            currTime = customRB.time();
+
         if (captureBuffer.Count < BUFFERCAPACITY-1)
-            captureBuffer.Add(new FrisbeeLocation(trackingTarget.localRotation, trackingTarget.localPosition, Time.time, customRB.isSeen()));
+            captureBuffer.Add(new FrisbeeLocation(trackingTarget.localRotation, trackingTarget.localPosition, currTime, isSeen));
         else //buffer has reached BUFFERCAPACITY
         {
             captureBuffer.RemoveFront(); //remove oldest FrisbeeLocation
-            captureBuffer.Add(new FrisbeeLocation(trackingTarget.localRotation, trackingTarget.localPosition, Time.time, customRB.isSeen()));
+            captureBuffer.Add(new FrisbeeLocation(trackingTarget.localRotation, trackingTarget.localPosition, currTime, isSeen));
         }
         
 
@@ -98,21 +110,23 @@ public class ThrowController : MonoBehaviour {
 		//0 = playback , 1 = waiting for throw + playback , 2 = throw in progress
         //Buffer first 2.5 seconds
         if (Time.time > scriptStartTime + 2.5F)
-		HandleModeChanges(currentPosition);
+		    HandleModeChanges(currentPosition); //change mode when appropriate
+
         if(Throwing())
         {
-            // Throw has begun, calculate and add FrisbeeLocations to captureBuffer
+            // Throw has begun, add FrisbeeLocations to throwBuffer
             FrisbeeLocation temp = captureBuffer.Get(captureBuffer.Count - 1);
             FrisbeeLocation prev = captureBuffer.Get(captureBuffer.Count - 1 - 2);
             float currentThrowTime = temp.time - throwStartTime;
-            float prevThrowTime = prev.time - throwStartTime;
+
+            /*float prevThrowTime = prev.time - throwStartTime;
             float fSpeed = Vector3.Distance(temp.pos, prev.pos) / (currentThrowTime - prevThrowTime);
             float a = (Quaternion.Inverse(prev.rot) * temp.rot).eulerAngles.y;
             float b = (Quaternion.Inverse(temp.rot) * prev.rot).eulerAngles.y;
 
             float rSpeed = Mathf.Abs((Mathf.Min(a,b) / 360F) / (currentThrowTime - prevThrowTime));
-            rSpeed = rSpeed * 60F;
-            throwBuffer.Add(new FrisbeeLocation(temp.rot, temp.pos, currentThrowTime, fSpeed, rSpeed, temp.wasSeen));
+            rSpeed = rSpeed * 60F;*/
+            throwBuffer.Add(new FrisbeeLocation(temp.rot, temp.pos, currentThrowTime, 0F, 0F, temp.wasSeen));
         }
 
 		SetModeText();
@@ -200,7 +214,10 @@ public class ThrowController : MonoBehaviour {
     // before the detection occurred
 	void HandleThrow ()
 	{
-        throwStartTime = Time.time - throwBacktrackingTime;
+        if (useOptitrackTimestamp)
+            throwStartTime = OptitrackHiResTimer.Now().SecondsSince(customRB.zeroTime) - throwBacktrackingTime;
+        else
+            throwStartTime = Time.time - throwBacktrackingTime;
         int firstThrowIndex = getBufferIndexFromTime(captureBuffer, throwStartTime);
         throwMode = 2;
 		Debug.Log("Throw just began!");
@@ -231,15 +248,8 @@ public class ThrowController : MonoBehaviour {
                 else
                     prev = throwBuffer[throwBuffer.Count - 1];
                 float currentThrowTime = temp.time - throwStartTime; //rest of the timestamps will increment from zero
-                float fSpeed = Vector3.Distance(temp.pos, prev.pos) / (currentThrowTime - prev.time);
-
-                //this is experimental, we are not absolutely sure if this is the correct way to calculate rpm
-                float a = (Quaternion.Inverse(prev.rot) * temp.rot).eulerAngles.y;
-                float b = (Quaternion.Inverse(temp.rot) * prev.rot).eulerAngles.y;
-
-                float rSpeed = Mathf.Abs((Mathf.Min(a,b)/360F) / (currentThrowTime - prev.time));
-                rSpeed = rSpeed * 60F;
-                throwBuffer.Add(new FrisbeeLocation(temp.rot, temp.pos, currentThrowTime, fSpeed, rSpeed, temp.wasSeen));
+                //add backtracked points to throwBuffer
+                throwBuffer.Add(new FrisbeeLocation(temp.rot, temp.pos, currentThrowTime, 0F, 0F, temp.wasSeen));
             }
             //Debug.Log("ThrowBuffer: " + throwBuffer[throwBuffer.Count - 1].rotSpeed.ToString());
         }
@@ -250,11 +260,44 @@ public class ThrowController : MonoBehaviour {
 	}
 
     //Detect if z-distance is greater than ending threshold (virtual wall)
+    //Calculate speeds
 	void HandleEnd (Vector3 position)
 	{
 		if (position.z > threshold.ending) {
-			Debug.Log ("hit max throw z-distance at: " + position);
-			throwMode = 0;
+			Debug.Log ("hit max throw z-distance at: " + position.ToString("F3"));
+
+            if (throwBuffer.Count > speedCalculationFrames*2 + 10)
+            {
+                for (int i = speedCalculationFrames; i < throwBuffer.Count-speedCalculationFrames; i++)
+                {
+                    FrisbeeLocation temp = throwBuffer[i + speedCalculationFrames];
+                    FrisbeeLocation prev = throwBuffer[i - speedCalculationFrames];
+                    float fSpeed = Vector3.Distance(temp.pos, prev.pos) / (temp.time - prev.time);
+
+                    //this is experimental, we are not absolutely sure if this is the correct way to calculate rpm
+                    float a = (Quaternion.Inverse(prev.rot) * temp.rot).eulerAngles.y;
+                    float b = (Quaternion.Inverse(temp.rot) * prev.rot).eulerAngles.y;
+
+                    float rSpeed = Mathf.Abs((Mathf.Min(a, b) / 360F) / (temp.time - prev.time));
+                    rSpeed = rSpeed * 60F;
+
+                    throwBuffer[i].forwardSpeed = fSpeed;
+                    throwBuffer[i].rotSpeed = rSpeed;
+                }
+
+                //set beginning and end speeds
+                for (int i=0; i<speedCalculationFrames; i++)
+                {
+                    throwBuffer[i].forwardSpeed = throwBuffer[speedCalculationFrames].forwardSpeed;
+                    throwBuffer[i].rotSpeed = throwBuffer[speedCalculationFrames].rotSpeed;
+                }
+                for (int i = throwBuffer.Count - speedCalculationFrames; i < throwBuffer.Count; i++)
+                {
+                    throwBuffer[i].forwardSpeed = throwBuffer[throwBuffer.Count - speedCalculationFrames - 1].forwardSpeed;
+                    throwBuffer[i].rotSpeed = throwBuffer[throwBuffer.Count - speedCalculationFrames - 1].rotSpeed;
+                }
+            }
+            throwMode = 0;
             nextThrow = Time.time + throwRate;
         }
         
