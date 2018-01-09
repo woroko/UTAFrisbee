@@ -9,22 +9,29 @@ public class DebugMover : MonoBehaviour {
 
     public GameObject frisbeeModel;
     public TextAsset recording;
+    public TextAsset recording2;
     public float speed = 1F;
 
     // We start from row 7, since there is some junk in the csv
     const int FIRSTROW = 7;
 
     List<FrisbeeLocation> locationList = new List<FrisbeeLocation>();
+    List<FrisbeeLocation> locationList1 = new List<FrisbeeLocation>();
+    List<FrisbeeLocation> locationList2 = new List<FrisbeeLocation>();
+
     int animIndex = 0;
     Vector3 posScale = new Vector3(1.0F, 1.0F, 1.0F);
     float rateTimer = 0F;
     float beginTime = 0F;
 
     bool moving = false;
+    bool switchState = false;
 
     // Csv parsed to locationList at script init
     void Start () {
-        ParseCSVFile();
+        locationList1 = ParseCSVFile(recording);
+        locationList2 = ParseCSVFile(recording2);
+        locationList = locationList1;
     }
 	
 	// Update is called once per frame
@@ -35,6 +42,16 @@ public class DebugMover : MonoBehaviour {
             animIndex = 0;
             rateTimer = 0F;
             beginTime = Time.time;
+            if (switchState)
+            {
+                locationList = locationList1;
+                switchState = !switchState;
+            }
+            else
+            {
+                locationList = locationList2;
+                switchState = !switchState;
+            }
         }
         //Begin steady
         else if (Time.time < beginTime + 2.5F) {
@@ -70,9 +87,10 @@ public class DebugMover : MonoBehaviour {
         }
     }
 
-    void ParseCSVFile()
+    List<FrisbeeLocation> ParseCSVFile(TextAsset rec)
     {
-        string[] rows = recording.text.Split('\n');
+        string[] rows = rec.text.Split('\n');
+        List<FrisbeeLocation> list = new List<FrisbeeLocation>();
 
         for (int i = FIRSTROW; i < rows.Length; i++)
         {
@@ -89,13 +107,14 @@ public class DebugMover : MonoBehaviour {
                 Vector3 pos = new Vector3(float.Parse(cols[6]),
                     float.Parse(cols[7]), float.Parse(cols[8]));
 
-                locationList.Add(new FrisbeeLocation(rot, pos));
+                list.Add(new FrisbeeLocation(rot, pos));
 
             }
             catch
             {
-                locationList.Add(null);
+                list.Add(null);
             }
         }
+        return list;
     }
 }

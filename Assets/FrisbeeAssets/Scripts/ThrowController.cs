@@ -33,7 +33,6 @@ public class ThrowController : MonoBehaviour {
     //Threshold holds the parameters for the backtracking and detection algorithm
 	public Threshold threshold;
 	public Transform trackingTarget;
-    public CustomRigidBody customRB;
 
 
 	//UI
@@ -93,21 +92,17 @@ public class ThrowController : MonoBehaviour {
         }
 
         Vector3 currentPosition = new Vector3 (trackingTarget.position.x, trackingTarget.position.y, trackingTarget.position.z);
-
+        float currTime = Time.time;
 
         //add current FrisbeeLocation to back of queue
         //buffer has not yet reached full capacity
-        bool isSeen = customRB.isSeen();
-        float currTime = Time.time;
-        if (isSeen && useOptitrackTimestamp)
-            currTime = customRB.time();
 
         if (captureBuffer.Count < BUFFERCAPACITY-1)
-            captureBuffer.Add(new FrisbeeLocation(trackingTarget.localRotation, trackingTarget.localPosition, currTime, isSeen));
+            captureBuffer.Add(new FrisbeeLocation(trackingTarget.localRotation, trackingTarget.localPosition, currTime, false));
         else //buffer has reached BUFFERCAPACITY
         {
             captureBuffer.RemoveFront(); //remove oldest FrisbeeLocation
-            captureBuffer.Add(new FrisbeeLocation(trackingTarget.localRotation, trackingTarget.localPosition, currTime, isSeen));
+            captureBuffer.Add(new FrisbeeLocation(trackingTarget.localRotation, trackingTarget.localPosition, currTime, false));
         }
         
 
@@ -212,10 +207,7 @@ public class ThrowController : MonoBehaviour {
     // before the detection occurred
 	void HandleThrow ()
 	{
-        if (useOptitrackTimestamp)
-            throwStartTime = OptitrackHiResTimer.Now().SecondsSince(customRB.zeroTime) - throwBacktrackingTime;
-        else
-            throwStartTime = Time.time - throwBacktrackingTime;
+        throwStartTime = Time.time - throwBacktrackingTime;
         int firstThrowIndex = getBufferIndexFromTime(captureBuffer, throwStartTime);
         throwMode = 2;
 		Debug.Log("Throw just began!");

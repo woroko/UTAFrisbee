@@ -7,7 +7,6 @@ public class UIScript : MonoBehaviour {
 
 	// Variables to access the frisbee and it's script
 	private GameObject frisbee;
-	private CustomRigidBody frisbeeScript;
 
     public ModeHandler modeHandler;
 
@@ -25,7 +24,6 @@ public class UIScript : MonoBehaviour {
     // Use this for initialization
     void Start () {
 		frisbee = GameObject.Find ("RecordingFrisbee");
-		frisbeeScript = frisbee.GetComponent<CustomRigidBody> ();
         firstThrow = true;
 	}
 	
@@ -124,10 +122,8 @@ public class UIScript : MonoBehaviour {
             }
         }
 
-        if (frisbeeScript.isSeen())
-            isSeenText.text = "";
-        else
-            isSeenText.text = "Can't see fisbee!";
+
+        isSeenText.text = "NoTrack WebGL";
 
         // Changing the indicator text based on the throwmode
         int throwmode = ThrowController.GetMode();
@@ -142,7 +138,7 @@ public class UIScript : MonoBehaviour {
 
         // Ready to throw
         else if (throwmode == 1) {
-            if (frisbeeScript.isSeen()) {
+            if (true) {
                 recordingIndicator.color = Color.white;
                 if (firstThrow == true)
                     recordingIndicator.text = "Ready for a new throw";
