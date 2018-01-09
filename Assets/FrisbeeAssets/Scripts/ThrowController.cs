@@ -10,7 +10,11 @@ public class Threshold {
     //recommended values are 0.3, 0.2, 1.2, 10, -0.5
 }
 
-
+/*
+ * ThrowController handles throw detection and speed calculation.
+ * The captured data is passed to ModeHandler.
+ * ModeHandler switches mode depending on the state of ThrowController (throwMode)
+ */
 public class ThrowController : MonoBehaviour {
 
     //Suggested values: backtracking=1.5s, throwDetection=0.5s
@@ -20,7 +24,8 @@ public class ThrowController : MonoBehaviour {
     public float throwDetectionTime = 0.5F;
 
     //whether we use OptitrackHiResTimer or unity Time.time. Both are converted to float, so they lose accuracy after several hours
-    public bool useOptitrackTimestamp = false;
+    //This should be permanently disabled, because only the unity timestamps are implemented correctly at this time.
+    private readonly bool useOptitrackTimestamp = false;
 
     //how many frames of context we use to calculate speed
     public int speedCalculationFrames = 2;
@@ -115,17 +120,10 @@ public class ThrowController : MonoBehaviour {
         if(Throwing())
         {
             // Throw has begun, add FrisbeeLocations to throwBuffer
+            //Throw has begun, throwBuffer timestamps increment from zero
             FrisbeeLocation temp = captureBuffer.Get(captureBuffer.Count - 1);
-            FrisbeeLocation prev = captureBuffer.Get(captureBuffer.Count - 1 - 2);
             float currentThrowTime = temp.time - throwStartTime;
 
-            /*float prevThrowTime = prev.time - throwStartTime;
-            float fSpeed = Vector3.Distance(temp.pos, prev.pos) / (currentThrowTime - prevThrowTime);
-            float a = (Quaternion.Inverse(prev.rot) * temp.rot).eulerAngles.y;
-            float b = (Quaternion.Inverse(temp.rot) * prev.rot).eulerAngles.y;
-
-            float rSpeed = Mathf.Abs((Mathf.Min(a,b) / 360F) / (currentThrowTime - prevThrowTime));
-            rSpeed = rSpeed * 60F;*/
             throwBuffer.Add(new FrisbeeLocation(temp.rot, temp.pos, currentThrowTime, 0F, 0F, temp.wasSeen));
         }
 

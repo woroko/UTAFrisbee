@@ -4,7 +4,7 @@ Frisbee Visualizer 2018
 Frisbee Visualizer 2018 is a 3D motion analysis tool made for analyzing Frisbee throwing motion in various flying disc games.
 Our tool requires Unity 2017.2.0f3 together with OptiTrack Flex cameras, the OptiTrack Motive software and OptiTrack Unity plugin.
 
-For usage instructions refer to the main menu of our software. To get started, you need to calibrate the OptiTrack system with Motive and the calibration wand, and set the ground plane with Z+ pointing in the throw direction. Additionally, network streaming needs to be enabled inside Motive and set to Local Loopback. To start our software, you can either use the standalone build or open our scene inside Unity and start playback. We recommend opening inside Unity if there are low-level parameters that need customizing, although there are some basic settings inside the start menu.
+For usage instructions refer to the main menu of our software. To get started, you need to calibrate the OptiTrack system with Motive and the calibration wand, and set the ground plane with Z+ pointing in the throw direction. Additionally, network streaming needs to be enabled inside Motive and set to Local Loopback, and a rigid body with an id of 1 should be set up inside Motive. To start our software, you can either use the standalone build or open our scene inside Unity and start playback. We recommend opening inside Unity if you need to customize low-level parameters (i.e. the number of frames used for speed calculation inside ThrowController), although there are some basic settings inside the start menu.
 
 The main parts of our software are:
 * Custom Unity C# scripts for:
@@ -27,3 +27,5 @@ The main parts of our software are:
     * Permanent Canvas, for the floating UI text with Text and Dropdown objects
     * EventSystem to receive UI events
   * At the root level, there are additionally some lights, a ground plane, a green line representing the green zone used for accuracy calculation, and Trail/SimulationTrail which contain TrailHandlers
+  
+  Many of the low-level parameters are customizable from inside the editor. 
