@@ -4,7 +4,7 @@ Frisbee Visualizer 2018
 Frisbee Visualizer 2018 is a 3D motion analysis tool made for analyzing Frisbee throwing motion in various flying disc games.
 Our tool requires Unity 2017.2.0f3 together with OptiTrack Flex cameras, the OptiTrack Motive software and OptiTrack Unity plugin.
 
-There is also a WebGL demo in the WebglDemo branch and at <https://people.uta.fi/~makela.john.a/Frisbee/>. The online demo can only play back the test motions, because the necessary plugins for Optitrack streaming are not supported for WebGL.
+There is a WebGL demo in the WebglDemo branch and at <https://people.uta.fi/~makela.john.a/Frisbee/>. The online demo can only play back the test motions, because the necessary plugins for Optitrack streaming are not supported for WebGL.
 
 For usage instructions refer to the main menu of our software. To get started, you need to calibrate the OptiTrack system with Motive and the calibration wand, and set the ground plane with Z+ pointing in the throw direction. Additionally, network streaming needs to be enabled inside Motive and set to Local Loopback, and a rigid body with an id of 1 should be set up inside Motive. To start our software, you can either use the standalone build or open our scene inside Unity and start playback. We recommend opening inside Unity if you need to customize low-level parameters (i.e. the number of frames used for speed calculation inside ThrowController), although there are some basic settings inside the start menu.
 
