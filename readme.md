@@ -4,6 +4,7 @@ This fork is for developing the next iteration of Frisbee Visualizer with a new 
 
 
 -----------------Original readme -----------------
+
 Frisbee Visualizer 2018 is a 3D motion analysis tool made for analyzing Frisbee throwing motion in various flying disc games.
 Our tool requires Unity 2017.2.0f3 together with OptiTrack Flex cameras, the OptiTrack Motive software and OptiTrack Unity plugin.
 
